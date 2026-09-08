@@ -25,14 +25,18 @@ from .llm import LLMError, OllamaProvider
 from .models import (
     AudioEvent,
     CaseEditRequest,
+    DoctorNotesRequest,
     InterviewDecision,
     InterviewSession,
     InterviewTurnResponse,
     PatientCase,
+    ReviewStatusRequest,
+    SessionMetaRequest,
     ResponseEvent,
     StateEvent,
     TextTurnRequest,
     TranscriptEvent,
+    TranscriptEditRequest,
     TurnResponse,
 )
 from .stt import LocalWhisperProvider, NoSpeechDetectedError, STTError, WhisperUnavailableError
@@ -236,8 +240,9 @@ async def _advance_medical_interview(session_id: str, patient_text: str) -> Inte
 @app.post("/api/interview/start", response_model=InterviewTurnResponse)
 async def start_medical_interview(
     session_id: str = Query(default="default", min_length=1, max_length=120),
+    language: str = Query(default="en"),
 ):
-    session = interview_store.start(session_id)
+    session = interview_store.start(session_id, language=language)
     await connections.send(session_id, StateEvent(state="speaking").model_dump())
     return await _interview_payload(session, MEDICAL_GREETING)
 
@@ -292,6 +297,40 @@ async def update_interview_case(request: CaseEditRequest):
     return interview_store.set_case(request.session_id, request.case)
 
 
+@app.put("/api/interview/session", response_model=InterviewSession)
+async def update_interview_session(request: SessionMetaRequest):
+    if not interview_store.get(request.session_id):
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    try:
+        return interview_store.set_language(request.session_id, request.language)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.put("/api/interview/notes", response_model=InterviewSession)
+async def update_doctor_notes(request: DoctorNotesRequest):
+    if not interview_store.get(request.session_id):
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    return interview_store.set_notes(request.session_id, request.notes)
+
+
+@app.put("/api/interview/review", response_model=InterviewSession)
+async def update_review_status(request: ReviewStatusRequest):
+    if not interview_store.get(request.session_id):
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    return interview_store.set_review_status(request.session_id, request.reviewed)
+
+
+@app.put("/api/interview/transcript", response_model=InterviewSession)
+async def edit_transcript_entry(request: TranscriptEditRequest):
+    if not interview_store.get(request.session_id):
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    try:
+        return interview_store.edit_transcript(request.session_id, request.index, request.text)
+    except IndexError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @app.post("/api/interview/clear")
 async def clear_medical_interview(
     session_id: str = Query(default="default", min_length=1, max_length=120),
@@ -304,8 +343,14 @@ async def clear_medical_interview(
 @app.post("/api/interview/demo/start", response_model=InterviewTurnResponse)
 async def start_demo_interview(
     session_id: str = Query(default="default", min_length=1, max_length=120),
+    language: str = Query(default="en"),
 ):
-    session = interview_store.start(session_id, is_demo=True)
+    session = interview_store.start(session_id, is_demo=True, language=language)
+    interview_store.set_case(
+        session_id,
+        PatientCase(patient_name="Aarav Sharma", age="32", gender="Male"),
+    )
+    session = interview_store.get(session_id) or session
     await connections.send(session_id, StateEvent(state="speaking").model_dump())
     return await _interview_payload(session, MEDICAL_GREETING, use_audio=False)
 
@@ -365,7 +410,13 @@ def _case_text(session: InterviewSession) -> str:
         "other_information": "Other Relevant Information",
         "information_not_obtained": "Information Not Obtained",
     }
-    lines = ["PATIENT CASE SUMMARY", "AI case-taking assistant — not a diagnostic or treatment system.", ""]
+    lines = [
+        "VOICECASE AI — PATIENT CASE SUMMARY",
+        "AI-assisted information. Review by a qualified healthcare professional is required.",
+        f"LANGUAGE: {session.language.upper()}",
+        f"REVIEW STATUS: {session.review_status.upper()}",
+        "",
+    ]
     values = session.case.model_dump()
     for field, label in labels.items():
         value = values[field]
@@ -375,6 +426,9 @@ def _case_text(session: InterviewSession) -> str:
     for entry in session.transcript:
         speaker = "ASSISTANT" if entry.speaker == "assistant" else "PATIENT"
         lines.append(f"{speaker}: {entry.text}")
+        if entry.edited_text:
+            lines.append(f"{speaker} (CORRECTED): {entry.edited_text}")
+    lines.extend(["", "DOCTOR NOTES", session.doctor_notes or "None recorded"])
     lines.extend(["", "Information should be reviewed by a qualified clinician."])
     return "\n".join(lines)
 

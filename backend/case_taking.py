@@ -222,10 +222,17 @@ class InterviewStore:
         self._sessions: dict[str, InterviewSession] = {}
         self._lock = Lock()
 
-    def start(self, session_id: str, is_demo: bool = False) -> InterviewSession:
+    def start(
+        self,
+        session_id: str,
+        is_demo: bool = False,
+        language: str = "en",
+    ) -> InterviewSession:
         session = InterviewSession(
             session_id=session_id,
             status="in_progress",
+            language=language if language in {"en", "hi", "mr"} else "en",
+            started_at=_timestamp(),
             is_demo=is_demo,
         )
         self._add_assistant(session, MEDICAL_GREETING)
@@ -250,7 +257,12 @@ class InterviewStore:
             )
             session.status = "in_progress"
             session.transcript.append(
-                TranscriptEntry(speaker="patient", text=text, timestamp=_timestamp())
+                TranscriptEntry(
+                    speaker="patient",
+                    text=text,
+                    timestamp=_timestamp(),
+                    original_text=text,
+                )
             )
             return copy.deepcopy(session)
 
@@ -274,12 +286,42 @@ class InterviewStore:
                 self._add_assistant(session, question)
             if decision.interview_complete:
                 session.status = "completed"
+                session.completed_at = session.completed_at or _timestamp()
             return copy.deepcopy(session)
 
     def set_case(self, session_id: str, case: PatientCase) -> InterviewSession:
         with self._lock:
             session = self._sessions[session_id]
             session.case = copy.deepcopy(case)
+            return copy.deepcopy(session)
+
+    def set_language(self, session_id: str, language: str) -> InterviewSession:
+        with self._lock:
+            session = self._sessions[session_id]
+            if language not in {"en", "hi", "mr"}:
+                raise ValueError("Unsupported interview language.")
+            session.language = language
+            return copy.deepcopy(session)
+
+    def set_notes(self, session_id: str, notes: str) -> InterviewSession:
+        with self._lock:
+            session = self._sessions[session_id]
+            session.doctor_notes = notes.strip()
+            return copy.deepcopy(session)
+
+    def set_review_status(self, session_id: str, reviewed: bool) -> InterviewSession:
+        with self._lock:
+            session = self._sessions[session_id]
+            session.review_status = "reviewed" if reviewed else "pending"
+            session.reviewed_at = _timestamp() if reviewed else ""
+            return copy.deepcopy(session)
+
+    def edit_transcript(self, session_id: str, index: int, text: str) -> InterviewSession:
+        with self._lock:
+            session = self._sessions[session_id]
+            if index >= len(session.transcript):
+                raise IndexError("Transcript entry not found.")
+            session.transcript[index].edited_text = text.strip()
             return copy.deepcopy(session)
 
     def increment_demo_step(self, session_id: str) -> int:
@@ -296,5 +338,10 @@ class InterviewStore:
     @staticmethod
     def _add_assistant(session: InterviewSession, text: str) -> None:
         session.transcript.append(
-            TranscriptEntry(speaker="assistant", text=text, timestamp=_timestamp())
+            TranscriptEntry(
+                speaker="assistant",
+                text=text,
+                timestamp=_timestamp(),
+                original_text=text,
+            )
         )

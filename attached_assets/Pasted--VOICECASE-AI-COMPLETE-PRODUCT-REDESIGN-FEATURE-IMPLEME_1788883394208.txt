@@ -1,0 +1,1762 @@
+# VOICECASE AI — COMPLETE PRODUCT REDESIGN + FEATURE IMPLEMENTATION
+
+You are working on an EXISTING VoiceCase AI project.
+
+Do NOT blindly rebuild the application from scratch.
+
+First inspect the existing codebase, understand the current architecture, identify what already works, and then improve it.
+
+The goal is to transform the existing project into a **polished, hospital-grade healthcare SaaS prototype** suitable for:
+
+* Hospital demonstrations
+* Smart India Hackathon / hackathons
+* Investor demonstrations
+* Healthcare organizations
+* Doctor/user testing
+
+The most important priorities are:
+
+1. Excellent UI/UX
+2. Reliable voice interaction
+3. Natural interview experience
+4. Professional doctor dashboard
+5. Clear patient case documentation
+6. Fast demo experience
+7. Clean maintainable architecture
+8. No unnecessary over-engineering
+
+---
+
+# 1. CORE PRODUCT
+
+Product name:
+
+**VoiceCase AI**
+
+Tagline:
+
+**"Let the patient tell their story before they enter the consultation room."**
+
+VoiceCase AI is a multilingual voice-based patient case-taking assistant.
+
+It collects structured medical history before consultation by:
+
+PATIENT
+↓
+VOICE INTERVIEW
+↓
+SPEECH-TO-TEXT
+↓
+STRUCTURED QUESTIONS
+↓
+ANSWER PROCESSING
+↓
+CASE HISTORY
+↓
+DOCTOR REVIEW
+
+It is NOT an AI doctor.
+
+The system must never:
+
+* Diagnose
+* Prescribe medication
+* Recommend treatment
+* Provide medical conclusions
+* Replace a healthcare professional
+
+The system is only for information collection and documentation.
+
+---
+
+# 2. FIRST: AUDIT THE EXISTING PROJECT
+
+Before modifying anything:
+
+Inspect:
+
+* package.json
+* frontend structure
+* backend structure
+* API routes
+* database
+* environment variables
+* speech recognition implementation
+* TTS implementation
+* LLM implementation
+* question engine
+* existing components
+* routing
+* state management
+* styling system
+
+Determine:
+
+* What is working?
+* What is broken?
+* What should be retained?
+* What should be refactored?
+* What dependencies are unnecessary?
+* What features from this specification are already implemented?
+
+DO NOT replace working functionality just for the sake of replacing it.
+
+---
+
+# 3. TECHNOLOGY DIRECTION
+
+Prefer a clean modern stack.
+
+## Frontend
+
+React + TypeScript
+
+Prefer:
+
+* Vite
+* Tailwind CSS
+* shadcn/ui or similarly clean component system
+* Lucide icons
+* React Router
+* TanStack Query where useful
+
+Avoid:
+
+* huge UI libraries
+* excessive dependencies
+* unnecessary animation libraries
+* complicated state-management frameworks unless genuinely required
+
+## Backend
+
+Python + FastAPI
+
+Use clear separation:
+
+API
+→ Services
+→ Business logic
+→ Database
+
+## Database
+
+For prototype:
+
+SQLite is acceptable.
+
+Architecture should make PostgreSQL easy to add later.
+
+## AI
+
+LLM should ONLY perform:
+
+* response understanding
+* structured extraction
+* approved follow-up selection
+* case-summary transformation
+
+It must NEVER generate arbitrary medical questioning.
+
+---
+
+# 4. DESIGN DIRECTION
+
+The current application UI should be completely redesigned.
+
+The visual language should feel like:
+
+**Modern healthcare SaaS + premium enterprise software**
+
+Not:
+
+* generic AI chatbot
+* student project
+* gaming UI
+* excessive glassmorphism
+* neon gradients
+* overly rounded cartoon UI
+* excessive animations
+* cluttered dashboard
+
+Think:
+
+* clean
+* clinical
+* calm
+* trustworthy
+* spacious
+* accessible
+* premium
+
+Use a restrained healthcare visual system.
+
+---
+
+# 5. DESIGN SYSTEM
+
+Create a consistent design system.
+
+## Typography
+
+Use a highly readable modern sans-serif.
+
+Hierarchy:
+
+* Large page titles
+* Medium section titles
+* Clear body text
+* Highly readable labels
+* Large patient-facing text
+
+Avoid tiny text.
+
+## Layout
+
+Use:
+
+* generous whitespace
+* clear hierarchy
+* consistent max-width containers
+* predictable spacing
+* strong alignment
+
+## Cards
+
+Use cards selectively.
+
+Cards should organize information, not make every element look like a floating box.
+
+## Icons
+
+Use Lucide icons.
+
+Do not use random emoji as interface icons.
+
+## Buttons
+
+Buttons should have:
+
+* clear labels
+* obvious primary action
+* large click targets
+* consistent hierarchy
+
+---
+
+# 6. APPLICATION SHELL
+
+Create two distinct experiences.
+
+## PATIENT EXPERIENCE
+
+Patient interface should be:
+
+* distraction-free
+* extremely simple
+* centered
+* accessible
+* optimized for microphone interaction
+
+No complicated navigation.
+
+## DOCTOR EXPERIENCE
+
+Doctor interface should be:
+
+* information-dense but clean
+* dashboard-oriented
+* desktop optimized
+* easy to scan
+* professional
+
+Doctor and patient interfaces should NOT look identical.
+
+---
+
+# 7. PATIENT WELCOME SCREEN
+
+Create a premium but simple landing screen.
+
+Display:
+
+VoiceCase AI
+
+**"Let the patient tell their story before they enter the consultation room."**
+
+Supporting text:
+
+"VoiceCase AI collects a patient's medical history through a guided voice interview and prepares it for professional review."
+
+Primary CTA:
+
+**Start Interview**
+
+Secondary:
+
+**Start Demo**
+
+Additional:
+
+**Select Language**
+
+**Privacy & Consent**
+
+Include a small trust section:
+
+* Multilingual
+* Voice-based
+* Structured history
+* Doctor reviewed
+
+Do not overload this page.
+
+---
+
+# 8. LANGUAGE SELECTION
+
+Supported demo languages:
+
+* English
+* Hindi
+* Marathi
+
+Language selection should be visually obvious.
+
+Once selected, the entire patient interview should use the selected language where supported.
+
+Store:
+
+language
+
+inside the interview/session.
+
+---
+
+# 9. CONSENT SCREEN
+
+Before microphone access:
+
+Title:
+
+**Before we begin**
+
+Message:
+
+"Your responses will be recorded and converted into text to prepare your case history for review by a healthcare professional."
+
+Include:
+
+* Privacy information
+* AI-assisted transcription notice
+* Doctor review notice
+
+Buttons:
+
+**I Agree & Start**
+
+**Cancel**
+
+Do not start recording until consent is explicitly accepted.
+
+---
+
+# 10. PATIENT VOICE INTERVIEW — MAJOR REDESIGN
+
+This is the most important screen in the entire product.
+
+It should feel like a calm conversation, NOT a form.
+
+Screen structure:
+
+TOP:
+
+VoiceCase AI logo
+
+Interview progress
+
+Language
+
+CENTER:
+
+Large animated microphone
+
+Current status:
+
+Listening...
+
+Speaking...
+
+Processing...
+
+Waiting...
+
+QUESTION:
+
+Large readable question text
+
+Example:
+
+**"What is your main health concern today?"**
+
+TRANSCRIPTION:
+
+Show the patient's answer in a clean conversation bubble/card.
+
+Example:
+
+You said:
+
+"I've had stomach pain for about three days."
+
+BOTTOM CONTROLS:
+
+Repeat Question
+
+Skip
+
+Stop Interview
+
+---
+
+# 11. MICROPHONE EXPERIENCE
+
+Create clear microphone states.
+
+## Idle
+
+Microphone available.
+
+## Listening
+
+Show subtle animation around microphone.
+
+Text:
+
+**Listening...**
+
+## Processing
+
+Text:
+
+**Understanding your response...**
+
+## Speaking
+
+Text:
+
+**VoiceCase AI is speaking...**
+
+## Error
+
+Show:
+
+"We couldn't hear that clearly."
+
+Buttons:
+
+Try Again
+
+Type Answer
+
+## Permission denied
+
+Explain clearly how to enable microphone permission.
+
+Do not trap the user.
+
+---
+
+# 12. INTERVIEW PROGRESS
+
+Show something like:
+
+Question 5 of 16
+
+or:
+
+████████░░░░
+
+Avoid making progress overly prominent.
+
+Patient should feel like they are having a conversation rather than completing a medical form.
+
+---
+
+# 13. QUESTION ENGINE
+
+Questions must be deterministic.
+
+Create a structured question configuration.
+
+Categories:
+
+PATIENT INFORMATION
+
+1. What is your name?
+2. What is your age?
+3. What is your gender?
+
+CHIEF COMPLAINT
+
+4. What is the main health problem you are experiencing?
+5. When did this problem start?
+6. Where exactly are you experiencing the problem?
+7. How severe is it from 1 to 10?
+8. Is the problem constant or does it come and go?
+9. What makes it better or worse?
+10. Are you experiencing any other symptoms?
+
+MEDICAL HISTORY
+
+11. Do you have any existing medical conditions?
+12. Are you currently taking any medicines?
+13. Do you have any known allergies?
+14. Have you had any previous surgeries or major medical problems?
+
+RELEVANT HISTORY
+
+15. Have you experienced this problem before?
+16. Is there anything else about your health that you think the doctor should know?
+
+Store each question with:
+
+* id
+* category
+* text
+* language
+* answer type
+* required/optional
+* approved follow-ups
+
+---
+
+# 14. ANSWER TYPES
+
+Support different response types where useful.
+
+Examples:
+
+Name:
+
+text
+
+Age:
+
+number
+
+Gender:
+
+choice
+
+Severity:
+
+1–10
+
+Everything else:
+
+voice/text
+
+Do not force every question to use free-form AI interpretation.
+
+Use deterministic parsing wherever possible.
+
+---
+
+# 15. FOLLOW-UP SYSTEM
+
+Follow-ups are allowed ONLY when useful.
+
+Create an approved follow-up question bank.
+
+The LLM can select from this bank.
+
+The LLM must NOT create new medical questions.
+
+Example:
+
+Patient:
+
+"I have stomach pain."
+
+Approved follow-up:
+
+"Can you tell me where exactly the pain is located?"
+
+The model may select that question.
+
+It cannot invent:
+
+"Does the pain indicate appendicitis?"
+
+Never allow diagnostic questioning.
+
+---
+
+# 16. SAFETY LAYER
+
+Create a separate safety service.
+
+If a patient response contains a potentially urgent situation, do NOT diagnose.
+
+Display:
+
+**"Please seek immediate assistance from a healthcare professional."**
+
+The system must not state:
+
+"You may have..."
+
+"This sounds like..."
+
+"You should take..."
+
+"This is safe..."
+
+"This is dangerous..."
+
+Keep all clinical decision-making with the doctor.
+
+---
+
+# 17. SPEECH-TO-TEXT ARCHITECTURE
+
+Create a modular SpeechService.
+
+Example abstraction:
+
+SpeechService
+
+Methods:
+
+startListening()
+
+stopListening()
+
+transcribe()
+
+isListening()
+
+getTranscript()
+
+This allows the STT provider to be replaced later.
+
+Do NOT tightly couple the UI to one speech provider.
+
+Handle:
+
+* microphone permission
+* silence
+* bad audio
+* empty transcript
+* network errors
+* provider errors
+* retry
+
+---
+
+# 18. TEXT-TO-SPEECH ARCHITECTURE
+
+Create a modular TTS service.
+
+Example:
+
+TTSService
+
+Methods:
+
+speak(text, language)
+
+stop()
+
+pause()
+
+resume()
+
+The patient should hear questions naturally.
+
+Allow:
+
+Repeat Question
+
+without advancing the interview.
+
+---
+
+# 19. INTERVIEW STATE MACHINE
+
+Do NOT manage the interview with scattered booleans.
+
+Create clear interview states:
+
+WELCOME
+
+CONSENT
+
+QUESTION
+
+SPEAKING
+
+LISTENING
+
+PROCESSING
+
+ANSWER_REVIEW
+
+FOLLOW_UP
+
+COMPLETING
+
+COMPLETED
+
+ERROR
+
+This will make the voice interaction reliable.
+
+---
+
+# 20. ANSWER REVIEW
+
+After transcription:
+
+Show:
+
+**We heard:**
+
+"The pain started three days ago."
+
+Buttons:
+
+Confirm
+
+Try Again
+
+Edit
+
+This is especially important because medical transcription can be imperfect.
+
+For a fast demo, automatically confirm after a short delay can be supported, but manual confirmation should remain available.
+
+---
+
+# 21. INTERVIEW COMPLETE SCREEN
+
+Create a strong completion experience.
+
+Title:
+
+**Your interview is complete**
+
+Message:
+
+"Thank you. Your information has been recorded and prepared for review by a healthcare professional."
+
+Show:
+
+Questions answered
+
+Interview duration
+
+Language
+
+Then:
+
+**View Case Summary**
+
+For patient-facing flow, do not expose medical interpretation.
+
+---
+
+# 22. DOCTOR DASHBOARD REDESIGN
+
+This should feel like a real healthcare SaaS dashboard.
+
+Desktop layout:
+
+SIDEBAR
+
+VoiceCase AI
+
+Dashboard
+
+Patient Cases
+
+Demo Patients
+
+Settings
+
+MAIN CONTENT
+
+Dashboard overview
+
+---
+
+# 23. DOCTOR DASHBOARD HOME
+
+Display:
+
+**Good morning**
+
+**Patient Cases**
+
+Cards:
+
+Today's Cases
+
+Pending Review
+
+Reviewed
+
+Demo Cases
+
+Then:
+
+Recent Patient Cases
+
+Columns:
+
+Patient
+
+Chief Complaint
+
+Interview Status
+
+Date
+
+Review Status
+
+Action
+
+---
+
+# 24. PATIENT CASE PAGE
+
+This is one of the most important screens.
+
+Header:
+
+Patient Name
+
+Age
+
+Gender
+
+Case ID
+
+Interview time
+
+Status:
+
+Pending Review
+
+or
+
+Reviewed
+
+Clearly display:
+
+**AI-assisted transcription — requires professional review.**
+
+---
+
+# 25. CASE SUMMARY DESIGN
+
+Create a professional medical-document style.
+
+Sections:
+
+## Patient Information
+
+Name
+
+Age
+
+Gender
+
+## Chief Complaint
+
+Main concern
+
+## History of Present Concern
+
+Duration
+
+Location
+
+Severity
+
+Pattern
+
+Triggers/relieving factors
+
+Associated symptoms
+
+## Medical History
+
+Existing conditions
+
+Medications
+
+Allergies
+
+Previous surgeries
+
+## Additional Information
+
+Previous occurrence
+
+Other relevant information
+
+---
+
+# 26. AI SUMMARY
+
+Generate a structured summary ONLY from collected answers.
+
+Example:
+
+PATIENT CASE SUMMARY
+
+Chief Complaint:
+Stomach pain
+
+Duration:
+3 days
+
+Location:
+Lower abdomen
+
+Severity:
+7/10
+
+Associated Symptoms:
+Nausea
+
+Medical History:
+No known conditions reported
+
+Medications:
+None reported
+
+Allergies:
+No known allergies reported
+
+At bottom:
+
+**AI-assisted information. Review by a qualified healthcare professional is required.**
+
+---
+
+# 27. TRANSCRIPT VIEW
+
+Create a dedicated transcript section.
+
+Example:
+
+BOT
+
+"What is your main health concern?"
+
+PATIENT
+
+"I have been having stomach pain for three days."
+
+BOT
+
+"When did this problem start?"
+
+PATIENT
+
+"It started on Monday."
+
+Make it visually similar to a professional conversation log.
+
+Allow:
+
+Edit transcription
+
+Correct answer
+
+Flag information
+
+Add note
+
+---
+
+# 28. DOCTOR EDITING
+
+Doctor should be able to edit:
+
+* Patient information
+* Transcriptions
+* Answers
+* Case summary
+* Notes
+
+Every editable section should have a clear Edit action.
+
+After modification:
+
+Show:
+
+**Last edited by healthcare professional**
+
+Do not pretend AI-generated content is doctor verified.
+
+---
+
+# 29. DOCTOR NOTES
+
+Add:
+
+**Doctor Notes**
+
+Large text area.
+
+Button:
+
+Save Note
+
+Notes are separate from AI-generated information.
+
+---
+
+# 30. REVIEW SYSTEM
+
+Add:
+
+**Mark as Reviewed**
+
+Once clicked:
+
+Status:
+
+Reviewed
+
+Show timestamp.
+
+Allow:
+
+Reviewed → Reopen Review
+
+if needed.
+
+---
+
+# 31. EXPORT
+
+Add:
+
+**Export Case**
+
+Support PDF or printable case summary for the prototype.
+
+The exported document should contain:
+
+VoiceCase AI
+
+Patient information
+
+Structured case history
+
+Transcript
+
+Doctor notes
+
+Review status
+
+AI-assisted information disclaimer
+
+---
+
+# 32. DEMO MODE
+
+This is extremely important.
+
+Add a highly visible:
+
+**Start Demo Patient**
+
+button.
+
+Demo should require NO microphone and NO real patient data.
+
+Use fictional patient:
+
+Name:
+
+Aarav Sharma
+
+Age:
+
+32
+
+Gender:
+
+Male
+
+Example complaint:
+
+"Stomach pain for three days."
+
+Populate the entire workflow.
+
+The demo should show:
+
+PATIENT
+
+↓
+
+VOICE INTERVIEW SIMULATION
+
+↓
+
+TRANSCRIPTION
+
+↓
+
+QUESTIONS
+
+↓
+
+ANSWERS
+
+↓
+
+CASE SUMMARY
+
+↓
+
+DOCTOR DASHBOARD
+
+---
+
+# 33. DEMO MODE UX
+
+When demo starts:
+
+Show a banner:
+
+**DEMO DATA — NOT A REAL PATIENT**
+
+Use a simulated voice/transcription experience if actual microphone services are unavailable.
+
+The demo must never require API keys just to demonstrate the UI.
+
+---
+
+# 34. DEMO CONTROL
+
+Add a small:
+
+**Demo Mode**
+
+indicator.
+
+Allow:
+
+Restart Demo
+
+Skip Question
+
+Complete Interview
+
+Open Doctor Dashboard
+
+This lets judges see the entire product quickly.
+
+---
+
+# 35. RESPONSIVE DESIGN
+
+Patient interface:
+
+Mobile
+Tablet
+Desktop
+
+Doctor dashboard:
+
+Desktop first
+Tablet supported
+
+Do not simply shrink desktop layouts.
+
+Use responsive layouts intentionally.
+
+---
+
+# 36. ACCESSIBILITY
+
+Important for healthcare.
+
+Ensure:
+
+* large touch targets
+* keyboard accessibility
+* readable contrast
+* visible focus states
+* screen-reader-friendly labels
+* no information communicated only through color
+* clear error messages
+* large patient-facing typography
+
+---
+
+# 37. ERROR HANDLING
+
+Never show raw errors such as:
+
+"AxiosError 500"
+
+or:
+
+"TypeError undefined"
+
+Instead:
+
+**Something went wrong**
+
+"Please try again."
+
+Provide:
+
+Retry
+
+Go Back
+
+Continue with text
+
+where appropriate.
+
+---
+
+# 38. LOADING STATES
+
+Every async operation needs a proper loading state.
+
+Examples:
+
+Transcribing:
+
+**Understanding your response...**
+
+Generating summary:
+
+**Preparing case history...**
+
+Saving:
+
+**Saving case...**
+
+Never leave the interface frozen.
+
+---
+
+# 39. EMPTY STATES
+
+Doctor dashboard should have useful empty states.
+
+Example:
+
+**No patient cases yet**
+
+"Start a demo interview or complete a patient interview to see cases here."
+
+CTA:
+
+Start Demo
+
+---
+
+# 40. DATABASE MODEL
+
+Use a clean schema.
+
+Suggested entities:
+
+Patient
+
+Interview
+
+Question
+
+Answer
+
+CaseSummary
+
+DoctorNote
+
+Review
+
+Store:
+
+Patient
+
+patient_id
+name
+age
+gender
+
+Interview
+
+interview_id
+patient_id
+language
+status
+started_at
+completed_at
+demo
+
+Question
+
+question_id
+category
+text
+
+Answer
+
+answer_id
+interview_id
+question_id
+transcript
+edited_transcript
+confirmed
+timestamp
+
+CaseSummary
+
+summary_id
+interview_id
+structured_data
+generated_at
+
+DoctorNote
+
+note_id
+interview_id
+content
+created_at
+
+Review
+
+review_id
+interview_id
+status
+reviewed_at
+
+---
+
+# 41. API STRUCTURE
+
+Keep backend APIs clean.
+
+Suggested endpoints:
+
+POST /interviews
+
+GET /interviews
+
+GET /interviews/{id}
+
+POST /interviews/{id}/answers
+
+PUT /answers/{id}
+
+POST /interviews/{id}/complete
+
+GET /interviews/{id}/summary
+
+POST /interviews/{id}/summary
+
+POST /interviews/{id}/notes
+
+PUT /interviews/{id}/review
+
+POST /demo/interview
+
+GET /health
+
+---
+
+# 42. SECURITY / PRIVACY FOR PROTOTYPE
+
+Never hardcode secrets.
+
+Use environment variables.
+
+Provide:
+
+.env.example
+
+Do not store API keys in frontend code.
+
+Clearly separate demo data from real patient data.
+
+Do not use real patient information.
+
+---
+
+# 43. PERFORMANCE
+
+The application should feel fast.
+
+Avoid:
+
+* unnecessary API requests
+* unnecessary re-renders
+* huge client bundles
+* loading the LLM for deterministic tasks
+* unnecessary animations
+
+The first interaction should feel immediate.
+
+---
+
+# 44. ANIMATION
+
+Use subtle animation only where it improves understanding.
+
+Good:
+
+Microphone pulse
+
+Page transitions
+
+Loading indicators
+
+Status changes
+
+Bad:
+
+Huge animated backgrounds
+
+Floating cards everywhere
+
+Excessive gradients
+
+Constant movement
+
+The application should feel medical, not flashy.
+
+---
+
+# 45. MOBILE PATIENT EXPERIENCE
+
+Patient screen should work especially well on tablets.
+
+The microphone should be the dominant interaction.
+
+Example:
+
+```
+             🎙
+
+          Listening...
+```
+
+"What is your main health concern?"
+
+"I've been having stomach pain..."
+
+```
+   [ Repeat ]
+
+   [ Try Again ]
+```
+
+The patient should immediately know what to do.
+
+---
+
+# 46. DOCTOR CASE COLOR SYSTEM
+
+Use status indicators carefully:
+
+Pending Review
+
+In Progress
+
+Reviewed
+
+Demo
+
+Do not rely solely on color.
+
+Use labels/icons as well.
+
+---
+
+# 47. NAVIGATION
+
+Patient flow:
+
+Welcome
+→ Language
+→ Consent
+→ Interview
+→ Complete
+
+Doctor flow:
+
+Dashboard
+→ Cases
+→ Patient Case
+→ Review
+→ Export
+
+Demo:
+
+Start Demo
+→ Simulated Interview
+→ Complete
+→ Dashboard
+→ Case
+
+---
+
+# 48. REMOVE BAD UI PATTERNS
+
+During redesign, actively remove:
+
+* unnecessary gradients
+* oversized hero sections
+* excessive rounded containers
+* excessive glass effects
+* inconsistent spacing
+* tiny fonts
+* random icons
+* emoji UI
+* redundant buttons
+* confusing navigation
+* generic chatbot appearance
+* excessive shadows
+* visual clutter
+
+---
+
+# 49. IMPORTANT: DO NOT BREAK WORKING FEATURES
+
+Before changing implementation:
+
+Identify existing working:
+
+* STT
+* TTS
+* API
+* database
+* LLM
+* demo mode
+
+Reuse what is good.
+
+Only replace components when necessary.
+
+The redesign should improve the product without destroying working functionality.
+
+---
+
+# 50. IMPLEMENTATION ORDER
+
+Follow this order:
+
+PHASE 1
+
+Audit existing code.
+
+PHASE 2
+
+Clean architecture and dependencies.
+
+PHASE 3
+
+Build design system.
+
+PHASE 4
+
+Redesign patient experience.
+
+PHASE 5
+
+Improve voice interview state machine.
+
+PHASE 6
+
+Implement structured questionnaire.
+
+PHASE 7
+
+Implement approved follow-up engine.
+
+PHASE 8
+
+Implement case summary.
+
+PHASE 9
+
+Redesign doctor dashboard.
+
+PHASE 10
+
+Implement transcript editing.
+
+PHASE 11
+
+Implement doctor notes/review.
+
+PHASE 12
+
+Implement demo mode.
+
+PHASE 13
+
+Implement export.
+
+PHASE 14
+
+Responsive/accessibility polish.
+
+PHASE 15
+
+Final testing.
+
+---
+
+# 51. ACCEPTANCE CRITERIA
+
+The project is NOT complete until I can demonstrate:
+
+### PATIENT
+
+Open VoiceCase AI
+
+→ Select Marathi/Hindi/English
+
+→ Give consent
+
+→ Start interview
+
+→ Hear question
+
+→ Speak answer
+
+→ See transcription
+
+→ Confirm answer
+
+→ Continue
+
+→ Finish interview
+
+→ See completion screen
+
+---
+
+### CASE GENERATION
+
+Interview answers
+
+→ Structured case
+
+→ Case summary
+
+→ Disclaimer
+
+---
+
+### DOCTOR
+
+Open dashboard
+
+→ See patient case
+
+→ Open case
+
+→ Read structured history
+
+→ Read transcript
+
+→ Edit transcription
+
+→ Add doctor notes
+
+→ Mark reviewed
+
+→ Export case
+
+---
+
+### DEMO
+
+Click:
+
+**Start Demo Patient**
+
+→ Complete simulated patient journey
+
+→ Open doctor dashboard
+
+→ Open fictional case
+
+→ Review case
+
+→ See:
+
+**DEMO DATA — NOT A REAL PATIENT**
+
+---
+
+# 52. FINAL QUALITY BAR
+
+Do not optimize for:
+
+"technically works."
+
+Optimize for:
+
+**"A hospital representative opens this and immediately understands the product."**
+
+The final interface should feel like a serious healthcare startup prototype.
+
+The experience should communicate:
+
+Trust
+
+Clarity
+
+Privacy
+
+Accessibility
+
+Efficiency
+
+Professional review
+
+The core story should be obvious within 30 seconds:
+
+**Patient speaks → VoiceCase AI structures the story → Doctor reviews the case.**
+
+Do not add unrelated features.
+
+Do not turn this into an AI doctor.
+
+Do not over-engineer.
+
+Build the smallest system that delivers an extremely polished demonstration.
+
+---
+
+# FINAL PRODUCT MESSAGE
+
+Throughout the application, reinforce:
+
+**VoiceCase AI**
+
+**"Let the patient tell their story before they enter the consultation room."**
+
+Supporting message:
+
+**"Voice-based patient case-taking, structured for professional review."**
+
+Final disclaimer:
+
+**"AI-assisted information. Review by a qualified healthcare professional is required."**

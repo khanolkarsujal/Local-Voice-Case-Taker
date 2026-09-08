@@ -3,54 +3,123 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0c1726" />
-    <title>Local Patient Case-Taking Assistant</title>
+    <meta name="theme-color" content="#f5f8fb" />
+    <meta name="description" content="VoiceCase AI — voice-based patient case-taking, structured for professional review." />
+    <title>VoiceCase AI — Patient Case-Taking</title>
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-          <div>
-            <p class="eyebrow">LOCAL CLINICAL TECHNOLOGY</p>
-            <h1>Patient Case-Taking Assistant</h1>
-          </div>
-        </div>
+        <button class="brand brand-button" id="brand-home-button" aria-label="Return to VoiceCase AI welcome">
+          <span class="brand-mark" aria-hidden="true">
+            <span class="brand-mark-cross"></span>
+            <span class="brand-mark-pulse"></span>
+          </span>
+          <span>
+            <span class="brand-name">VoiceCase <b>AI</b></span>
+            <span class="brand-tagline">Structured patient stories for professional review</span>
+          </span>
+        </button>
         <div class="header-actions">
           <div class="connection-pill" id="connection-pill">
             <span class="status-dot"></span>
             <span id="connection-label">Checking local services</span>
           </div>
-          <span class="session-tag">SESSION <strong id="session-short">—</strong></span>
+          <span class="privacy-chip">LOCAL &amp; PRIVATE</span>
+          <span class="session-tag">CASE <strong id="session-short">—</strong></span>
         </div>
       </header>
 
-      <div class="safety-banner">
-        <span class="safety-shield">+</span>
-        <span><strong>AI case-taking assistant — not a diagnostic or treatment system.</strong> Information should be reviewed by a qualified clinician.</span>
-      </div>
+      <section class="safety-banner">
+        <span class="safety-shield" aria-hidden="true">+</span>
+        <span><strong>Information collection assistant.</strong> VoiceCase AI does not diagnose or recommend treatment. A qualified healthcare professional must review all information.</span>
+      </section>
 
-      <nav class="view-nav" aria-label="Application views">
-        <button class="view-tab active" id="patient-view-tab">Patient interview</button>
-        <button class="view-tab" id="doctor-view-tab" disabled>Clinician review</button>
-        <span class="demo-badge" id="demo-badge" hidden>DEMO MODE — FICTIONAL DATA</span>
-      </nav>
+      <section id="welcome-view" class="welcome-view">
+        <div class="welcome-copy">
+          <p class="eyebrow">PATIENT INTAKE, MADE HUMAN</p>
+          <h1>Let the patient tell their story <em>before</em> they enter the consultation room.</h1>
+          <p class="welcome-lede">VoiceCase AI collects a patient’s history through a calm, guided voice interview and prepares it for professional review.</p>
 
-      <section id="patient-view">
-        <div class="hero-grid">
-          <section class="control-panel panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">GUIDED INTERVIEW</p>
-                <h2>Tell us what<br /><em>brings you in.</em></h2>
+          <div class="welcome-actions">
+            <button class="primary-button large-button" id="welcome-start-button">
+              <span class="button-icon">→</span>
+              Start Interview
+            </button>
+            <button class="secondary-button large-button" id="welcome-demo-button">
+              Start Demo Patient
+            </button>
+          </div>
+
+          <div class="welcome-controls">
+            <div class="language-control">
+              <span class="eyebrow">INTERVIEW LANGUAGE</span>
+              <div class="language-options" role="group" aria-label="Interview language">
+                <button class="language-option active" data-language="en">English</button>
+                <button class="language-option" data-language="hi">हिन्दी</button>
+                <button class="language-option" data-language="mr">मराठी</button>
               </div>
-              <span class="privacy-chip">LOCAL ONLY</span>
+              <small id="language-help">Choose the language you prefer for this interview.</small>
             </div>
+            <button class="quiet-link" id="privacy-consent-link">Privacy &amp; consent <span>↗</span></button>
+          </div>
 
-            <div class="question-card">
+          <div class="trust-row" aria-label="Product capabilities">
+            <span><b>01</b> Multilingual</span>
+            <span><b>02</b> Voice-based</span>
+            <span><b>03</b> Structured history</span>
+            <span><b>04</b> Clinician reviewed</span>
+          </div>
+        </div>
+
+        <div class="welcome-visual" aria-label="VoiceCase AI workflow">
+          <div class="visual-header">
+            <span class="eyebrow">THE JOURNEY</span>
+            <span class="visual-status"><i></i> Ready to begin</span>
+          </div>
+          <div class="journey">
+            <div class="journey-step active">
+              <span class="journey-number">01</span>
+              <span><strong>Patient</strong><small>tells their story</small></span>
+              <b>↗</b>
+            </div>
+            <div class="journey-line"></div>
+            <div class="journey-step">
+              <span class="journey-number">02</span>
+              <span><strong>VoiceCase AI</strong><small>structures the history</small></span>
+              <b>↗</b>
+            </div>
+            <div class="journey-line"></div>
+            <div class="journey-step">
+              <span class="journey-number">03</span>
+              <span><strong>Clinician</strong><small>reviews the case</small></span>
+              <b>↗</b>
+            </div>
+          </div>
+          <div class="visual-footnote"><span class="shield-mini">✓</span> Audio and case information stay on this computer by default.</div>
+        </div>
+      </section>
+
+      <section id="patient-view" hidden>
+        <div class="flow-toolbar">
+          <button class="quiet-link" id="patient-home-button">← Welcome</button>
+          <div class="flow-progress">
+            <span id="progress-count">Question 1 of 16</span>
+            <div class="progress-track"><span id="progress-fill"></span></div>
+          </div>
+          <div class="flow-meta">
+            <span class="language-pill" id="interview-language-label">English</span>
+            <span class="demo-badge" id="demo-badge" hidden>DEMO DATA — NOT A REAL PATIENT</span>
+          </div>
+        </div>
+
+        <div class="patient-layout">
+          <section class="interview-panel">
+            <div class="panel-kicker"><span class="live-dot"></span> GUIDED PATIENT INTERVIEW</div>
+            <div class="question-area">
               <span class="question-label">CURRENT QUESTION</span>
-              <p id="question-text">When you are ready, start the interview and tell me what brings you in today.</p>
+              <h2 id="question-text">When you are ready, tell me what brings you in today.</h2>
             </div>
 
             <div class="mic-stage">
@@ -63,120 +132,178 @@
                 </svg>
               </button>
             </div>
+
             <div class="state-block">
               <div class="state-label" id="state-label">Ready when you are</div>
               <p id="state-detail">Your answers are kept on this computer for clinician review.</p>
+            </div>
+
+            <div class="interview-controls">
+              <button class="control-button" id="repeat-button"><span>↻</span> Repeat question</button>
+              <button class="control-button" id="skip-button">Skip question <span>→</span></button>
             </div>
             <div class="control-actions">
               <button class="primary-button" id="start-button">Start Interview</button>
               <button class="secondary-button" id="stop-button" disabled>Stop Interview</button>
             </div>
             <div class="demo-actions">
-              <button class="demo-button" id="demo-button">Run Fictional Demo</button>
-              <button class="demo-button next" id="demo-next-button" hidden>Next Fictional Answer</button>
+              <button class="demo-button next" id="demo-next-button" hidden>Next demo answer <span>→</span></button>
             </div>
           </section>
 
-          <section class="conversation-panel panel">
-            <div class="panel-heading compact">
+          <section class="conversation-panel">
+            <div class="conversation-heading">
               <div>
-                <p class="eyebrow">ORIGINAL TRANSCRIPT</p>
-                <h2>Conversation</h2>
+                <p class="eyebrow">LIVE TRANSCRIPT</p>
+                <h3>What we’ve heard</h3>
               </div>
-              <button class="text-button" id="clear-button">Clear interview</button>
+              <button class="text-button" id="clear-button">Clear case</button>
             </div>
-            <div class="current-response" id="current-response">
-              <span class="response-label">ASSISTANT</span>
-              <p id="response-text">Your assistant’s next question will appear here.</p>
+            <div class="assistant-note">
+              <span>VOICECASE AI</span>
+              <p id="response-text">Your next question will appear here.</p>
             </div>
+
+            <div class="answer-review" id="answer-review" hidden>
+              <div>
+                <span class="review-label">WE HEARD</span>
+                <p id="answer-review-text"></p>
+              </div>
+              <div class="answer-review-actions">
+                <button class="confirm-button" id="confirm-answer-button">Confirm <span>✓</span></button>
+                <button class="review-action" id="retry-answer-button">Try again</button>
+                <button class="review-action" id="edit-answer-button">Edit</button>
+              </div>
+            </div>
+
             <div class="conversation-list" id="conversation-list">
               <div class="empty-state" id="empty-state">
                 <div class="empty-line"></div>
-                <p>The original conversation will build here.</p>
-                <span>Patient words are never replaced by a summary.</span>
+                <p>Your conversation will appear here.</p>
+                <span>Patient words remain separate from the structured case.</span>
               </div>
             </div>
             <form class="text-fallback" id="text-form">
-              <label for="text-input">Text fallback</label>
+              <label for="text-input">TEXT FALLBACK</label>
               <div class="text-row">
-                <input id="text-input" type="text" placeholder="Continue here if voice service is unavailable..." autocomplete="off" />
-                <button type="submit" aria-label="Send text">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8-3-8Zm3 8h10"/></svg>
-                </button>
+                <input id="text-input" type="text" placeholder="Type an answer if voice is unavailable..." autocomplete="off" />
+                <button type="submit" aria-label="Send text">→</button>
               </div>
             </form>
           </section>
         </div>
+
+        <div class="patient-footnote"><span class="shield-mini">✓</span> AI-assisted transcription · Information should be reviewed by a qualified healthcare professional.</div>
+      </section>
+
+      <section id="completion-view" class="completion-view" hidden>
+        <div class="completion-card">
+          <div class="completion-icon">✓</div>
+          <p class="eyebrow">INTERVIEW COMPLETE</p>
+          <h1>Your story is ready<br /><em>for review.</em></h1>
+          <p class="completion-copy">Thank you. Your information has been recorded and prepared for review by a healthcare professional.</p>
+          <div class="completion-stats">
+            <div><strong id="completion-answers">—</strong><span>Questions answered</span></div>
+            <div><strong id="completion-duration">—</strong><span>Interview duration</span></div>
+            <div><strong id="completion-language">English</strong><span>Language</span></div>
+          </div>
+          <button class="primary-button large-button" id="view-case-button">View Case Summary <span>→</span></button>
+          <p class="completion-disclaimer">AI-assisted information. Review by a qualified healthcare professional is required.</p>
+        </div>
       </section>
 
       <section id="doctor-view" hidden>
-        <div class="review-heading">
+        <div class="dashboard-heading">
           <div>
-            <p class="eyebrow">CLINICIAN REVIEW</p>
-            <h2>Patient Case Summary</h2>
-            <p class="review-subtitle">Review and correct the structured information before using it in a clinical workflow.</p>
+            <p class="eyebrow">CLINICIAN WORKSPACE</p>
+            <h1>Case review</h1>
+            <p>Review the structured history, source transcript, and professional notes before the consultation.</p>
           </div>
-          <div class="review-actions">
-            <button class="secondary-button" id="back-to-patient-button">Back to interview</button>
-            <button class="primary-button" id="new-interview-button">New Interview</button>
+          <div class="dashboard-actions">
+            <button class="secondary-button" id="back-to-patient-button">← Interview</button>
+            <button class="secondary-button" id="print-case-button">Print case</button>
+            <button class="primary-button" id="new-interview-button">New case <span>+</span></button>
           </div>
+        </div>
+
+        <div class="case-identity">
+          <div class="patient-avatar" id="patient-avatar">AS</div>
+          <div class="patient-identity">
+            <span class="eyebrow">PATIENT CASE</span>
+            <h2 id="patient-name">Patient case</h2>
+            <p id="patient-demographics">Information collected through VoiceCase AI</p>
+          </div>
+          <div class="identity-meta">
+            <span class="case-status pending" id="case-status"><i></i> Pending review</span>
+            <span id="case-id-label">CASE —</span>
+          </div>
+        </div>
+
+        <div class="dashboard-stats">
+          <div><span>INTERVIEW STATUS</span><strong id="dashboard-interview-status">Completed</strong><small id="dashboard-interview-date">Local session</small></div>
+          <div><span>LANGUAGE</span><strong id="dashboard-language">English</strong><small>Patient preference</small></div>
+          <div><span>REVIEW</span><strong id="dashboard-review-status">Pending review</strong><small id="dashboard-reviewed-at">Professional review required</small></div>
+          <div class="review-status-action"><button class="primary-button" id="mark-reviewed-button">Mark as reviewed <span>✓</span></button><button class="secondary-button" id="reopen-review-button" hidden>Reopen review</button></div>
         </div>
 
         <div class="review-grid">
           <section class="panel summary-panel">
-            <div class="panel-heading compact">
-              <div>
-                <p class="eyebrow">STRUCTURED INFORMATION</p>
-                <h3>History collected</h3>
-              </div>
-              <span class="review-state" id="review-state">Not saved</span>
+            <div class="section-heading">
+              <div><p class="eyebrow">STRUCTURED HISTORY</p><h3>Case summary</h3></div>
+              <span class="ai-label" id="review-state">READY FOR REVIEW</span>
             </div>
             <div class="case-fields" id="case-fields"></div>
             <div class="save-row">
-              <button class="primary-button" id="save-case-button">Save corrections</button>
+              <button class="primary-button" id="save-case-button">Save corrections <span>✓</span></button>
               <span class="save-message" id="save-message"></span>
             </div>
           </section>
 
           <section class="panel transcript-panel">
-            <div class="panel-heading compact">
-              <div>
-                <p class="eyebrow">SOURCE RECORD</p>
-                <h3>Original Conversation Transcript</h3>
-              </div>
+            <div class="section-heading">
+              <div><p class="eyebrow">SOURCE RECORD</p><h3>Original transcript</h3></div>
+              <span class="source-label">Editable corrections</span>
             </div>
             <div class="review-transcript" id="review-transcript"></div>
-            <div class="export-actions">
-              <button class="secondary-button" id="export-json-button">Download JSON</button>
-              <button class="secondary-button" id="export-txt-button">Download TXT</button>
-            </div>
           </section>
+        </div>
+
+        <section class="panel notes-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">PROFESSIONAL REVIEW</p><h3>Doctor notes</h3></div>
+            <span class="source-label">Separate from AI-assisted information</span>
+          </div>
+          <textarea id="doctor-notes" rows="4" placeholder="Add a note for the clinical workflow..."></textarea>
+          <div class="notes-footer"><span id="notes-save-message"></span><button class="secondary-button" id="save-notes-button">Save note <span>✓</span></button></div>
+        </section>
+
+        <div class="doctor-disclaimer"><span class="shield-mini">✓</span><span><strong>AI-assisted information — professional review required.</strong> The original transcript is preserved as a source record. Corrections and doctor notes are clearly separated.</span><div class="export-actions"><button class="secondary-button" id="export-json-button">JSON</button><button class="secondary-button" id="export-txt-button">TXT</button></div></div>
+      </section>
+
+      <section class="service-strip">
+        <div class="service-strip-label"><span class="eyebrow">LOCAL SYSTEM</span><span id="last-checked">Not checked</span></div>
+        <div class="service-list">
+          <div class="service-row"><span><i class="service-icon">W</i> Whisper</span><span class="service-status" id="whisper-status">Checking</span></div>
+          <div class="service-row"><span><i class="service-icon">O</i> Ollama <small>qwen3:8b</small></span><span class="service-status" id="ollama-status">Checking</span></div>
+          <div class="service-row"><span><i class="service-icon">P</i> Piper <small>lessac-medium</small></span><span class="service-status" id="piper-status">Checking</span></div>
         </div>
       </section>
 
-      <section class="bottom-grid">
-        <section class="panel status-panel">
-          <div class="panel-heading compact">
-            <div>
-              <p class="eyebrow">SYSTEM CHECK</p>
-              <h3>Local services</h3>
-            </div>
-            <span class="refresh-label" id="last-checked">Not checked</span>
+      <div class="consent-backdrop" id="consent-modal" hidden>
+        <section class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+          <button class="modal-close" id="consent-cancel-button" aria-label="Close consent dialog">×</button>
+          <div class="consent-icon">✓</div>
+          <p class="eyebrow">BEFORE WE BEGIN</p>
+          <h2 id="consent-title">A few things to know</h2>
+          <p class="consent-lede">Your responses will be recorded and converted into text to prepare your case history for review by a healthcare professional.</p>
+          <div class="consent-list">
+            <div><span>01</span><p><strong>AI-assisted transcription</strong><br />Your voice is transcribed locally on this computer.</p></div>
+            <div><span>02</span><p><strong>Professional review</strong><br />This assistant collects information; it does not diagnose or recommend treatment.</p></div>
+            <div><span>03</span><p><strong>Privacy by default</strong><br />Information stays in this session unless you explicitly export it.</p></div>
           </div>
-          <div class="service-list">
-            <div class="service-row"><span class="service-name"><i class="service-icon">W</i> Whisper</span><span class="service-status" id="whisper-status">Checking</span></div>
-            <div class="service-row"><span class="service-name"><i class="service-icon">O</i> Ollama <small>qwen3:8b</small></span><span class="service-status" id="ollama-status">Checking</span></div>
-            <div class="service-row"><span class="service-name"><i class="service-icon">P</i> Piper <small>lessac-medium</small></span><span class="service-status" id="piper-status">Checking</span></div>
-          </div>
+          <div class="consent-actions"><button class="secondary-button" id="consent-cancel-action">Cancel</button><button class="primary-button" id="consent-agree-button">I Agree &amp; Start <span>→</span></button></div>
         </section>
-        <section class="panel privacy-panel">
-          <div class="privacy-icon">⌁</div>
-          <div>
-            <p class="eyebrow">PRIVACY BY DEFAULT</p>
-            <p>Audio, transcripts, and case information stay in this session on this computer. Nothing is stored permanently unless you explicitly export it.</p>
-          </div>
-        </section>
-      </section>
+      </div>
 
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </main>

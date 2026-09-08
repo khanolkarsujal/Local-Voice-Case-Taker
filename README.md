@@ -122,6 +122,7 @@ Click **Run Fictional Demo** to demonstrate the whole workflow without microphon
 - Structured case extraction
 - Clinician review and editable fields
 - JSON and TXT export
+- Clinician notes, review status, transcript corrections, and print-ready case output
 
 The demo is clearly marked **DEMO MODE — FICTIONAL DATA** and does not contain real patient information.
 
@@ -155,7 +156,7 @@ WHISPER_COMPUTE_TYPE=<supported-compute-type>
 - `backend/conversation.py` keeps the original generic voice history for the first pipeline.
 - `backend/case_taking.py` defines the editable medical case schema, safety prompt, ephemeral sessions, transcript preservation, and fictional demo data.
 - `backend/main.py` exposes `/health`, patient voice/text interview routes, demo routes, clinician review/export routes, and a small WebSocket for state updates.
-- `frontend/` contains the patient interview screen, microphone/audio loop, demo controls, clinician review, editable case fields, and export actions.
+- `frontend/` contains the VoiceCase AI welcome/consent flow, language selection, patient interview screen, microphone/audio loop, answer confirmation, completion screen, clinician workspace, editable case fields/transcript, notes, review status, printing, and export actions.
 
 The provider boundaries make it possible to replace STT, LLM, or TTS later without changing the medical case store and browser layers. Case data and transcript are held in memory only and disappear when the process exits unless explicitly exported.
 
@@ -164,7 +165,9 @@ The provider boundaries make it possible to replace STT, LLM, or TTS later witho
 - The assistant never presents itself as a doctor.
 - It does not diagnose, prescribe, recommend treatment, or tell a patient to change medication.
 - Original patient transcript entries are retained separately from structured case fields.
-- Clinician corrections update only the structured fields; they do not silently change the original transcript.
+- Clinician corrections update only the structured fields; transcript corrections are stored separately from the original source text.
+- Clinician notes are stored separately from AI-assisted information.
+- Review status can be marked as reviewed and reopened.
 - Audio files are temporary and removed after transcription.
 - Patient audio, transcript, and case data are not logged or persisted by default.
 - The clinician review screen includes the reminder: “Information should be reviewed by a qualified clinician.”
@@ -177,6 +180,10 @@ The provider boundaries make it possible to replace STT, LLM, or TTS later witho
 - `POST /api/interview/demo/start` and `POST /api/interview/demo/step` — fictional local demonstration flow
 - `GET /api/interview/session?session_id=...` — retrieve the in-memory case and original transcript
 - `PUT /api/interview/case` — save clinician corrections to structured fields only
+- `PUT /api/interview/session` — save the selected interview language
+- `PUT /api/interview/transcript` — save a separate clinician correction for one transcript entry
+- `PUT /api/interview/notes` — save clinician notes
+- `PUT /api/interview/review` — mark the case reviewed or reopen it
 - `GET /api/interview/export.json` and `/api/interview/export.txt` — local downloads
 - `POST /api/interview/clear` — discard the in-memory session
 

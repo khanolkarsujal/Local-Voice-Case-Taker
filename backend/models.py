@@ -52,6 +52,9 @@ class AudioEvent(BaseModel):
 class PatientCase(BaseModel):
     """Editable structured history; the original transcript is stored separately."""
 
+    patient_name: str = ""
+    age: str = ""
+    gender: str = ""
     chief_complaint: str = ""
     history_of_present_illness: str = ""
     onset: str = ""
@@ -76,6 +79,9 @@ class CaseUpdates(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
+    patient_name: str | None = None
+    age: str | None = None
+    gender: str | None = None
     chief_complaint: str | None = None
     history_of_present_illness: str | None = None
     onset: str | None = None
@@ -111,11 +117,19 @@ class TranscriptEntry(BaseModel):
     speaker: Literal["assistant", "patient"]
     text: str
     timestamp: str
+    original_text: str = ""
+    edited_text: str = ""
 
 
 class InterviewSession(BaseModel):
     session_id: str
     status: Literal["not_started", "in_progress", "completed"] = "not_started"
+    language: Literal["en", "hi", "mr"] = "en"
+    started_at: str = ""
+    completed_at: str = ""
+    doctor_notes: str = ""
+    review_status: Literal["pending", "reviewed"] = "pending"
+    reviewed_at: str = ""
     current_section: str = "chief_complaint"
     case: PatientCase = Field(default_factory=PatientCase)
     transcript: list[TranscriptEntry] = Field(default_factory=list)
@@ -142,3 +156,24 @@ class InterviewTurnResponse(BaseModel):
 class CaseEditRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=120)
     case: PatientCase
+
+
+class SessionMetaRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=120)
+    language: Literal["en", "hi", "mr"] = "en"
+
+
+class DoctorNotesRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=120)
+    notes: str = Field(default="", max_length=20_000)
+
+
+class ReviewStatusRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=120)
+    reviewed: bool
+
+
+class TranscriptEditRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=120)
+    index: int = Field(ge=0)
+    text: str = Field(min_length=1, max_length=10_000)
