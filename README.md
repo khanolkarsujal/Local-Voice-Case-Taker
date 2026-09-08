@@ -48,32 +48,73 @@ For this CPU-only laptop, use the `small` model with CPU `int8` inference. Downl
 python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8'); print('faster-whisper small is ready')"
 ```
 
-### 5. Verify Ollama is running
+This command downloads the model and confirms that the Python environment can load it. Whisper is **not a separate server**. FastAPI loads the model into memory the first time a real microphone recording is transcribed, then reuses it for later turns.
+
+## Start all local services
+
+Use three PowerShell windows. Keep the first three windows open while using the application.
+
+### Window 1 — start Ollama
+
+Ollama must be running before a real interview can generate the next question.
+
+If the Ollama desktop application is already running, you can skip the start command and go straight to the checks:
+
+```powershell
+ollama serve
+```
+
+If you see an error saying that port `11434` is already in use, Ollama is probably already running. Do not start a second copy.
+
+Check that Ollama responds:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
-### 6. Verify qwen3:8b
-
-Install it once if it is not already listed:
+Install the model once if it is not already listed:
 
 ```powershell
 ollama pull qwen3:8b
 ollama list
 ```
 
-### 7. Start Piper
-
-Start the local Piper HTTP service using the Piper server command you already use. It must listen on:
+The `ollama list` output must include `qwen3:8b`. The application uses:
 
 ```text
-http://127.0.0.1:5000
+Ollama URL:   http://127.0.0.1:11434
+Ollama model: qwen3:8b
 ```
 
-It should expose `POST /synthesize` and accept a JSON body containing `text`. This app also sends `voice: en_US-lessac-medium` for Piper wrappers that support per-request voice selection.
+### Window 2 — start Piper
 
-### 8. Start FastAPI
+Piper is the local text-to-speech HTTP service. It is not started by FastAPI, and the Piper command differs depending on which Piper HTTP wrapper you installed.
+
+Start the Piper HTTP command or script you already use. Configure it with:
+
+```text
+Address: http://127.0.0.1:5000
+Voice:   en_US-lessac-medium
+Route:   POST /synthesize
+```
+
+The service must accept JSON containing `text` and return WAV audio. This application sends:
+
+```text
+{"text":"Hello from VoiceCase AI","voice":"en_US-lessac-medium"}
+```
+
+Some Piper wrappers choose the voice at startup and reject the `voice` property. The app automatically retries with only `{"text":"..."}` when that happens.
+
+Check Piper before starting FastAPI:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/health
+```
+
+If `/health` is not provided by your wrapper, opening `http://127.0.0.1:5000/` or checking the Piper terminal is also acceptable. The VoiceCase health check accepts either a successful `/health` or `/` response.
+
+### Window 3 — start FastAPI
 
 With the virtual environment active:
 
@@ -81,26 +122,63 @@ With the virtual environment active:
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-FastAPI starts without waiting for Whisper. The first voice transcription request loads `small` once; later recordings reuse that same in-memory model. The terminal should show:
+FastAPI is the application server. It connects the browser to Whisper, Ollama, and Piper. Leave this window running.
+
+### Open the application
+
+Open this URL in your browser:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Understand the service status
+
+The application checks all three local dependencies at:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+Run this in PowerShell:
+
+```powershell
+$health = Invoke-RestMethod http://127.0.0.1:8000/health
+$health | ConvertTo-Json -Depth 4
+```
+
+Healthy status looks like:
+
+```json
+{
+  "status": "ok",
+  "ollama": "online",
+  "piper": "online",
+  "whisper": "ready"
+}
+```
+
+The browser's **Local System** strip uses the same values:
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `Ollama online` | Ollama answered at port 11434 and the local model can be used. | Nothing; keep Ollama running. |
+| `Piper online` | Piper answered at port 5000. | Nothing; keep Piper running. |
+| `Whisper ready` | faster-whisper has loaded `small` into memory. | Nothing; microphone transcription is ready. |
+| `Whisper not_loaded` | FastAPI is running, but Whisper has not loaded yet. | This is normal before the first real voice transcription. Click **Start Interview** and make one recording. |
+| `Whisper failed` | Whisper tried to load but could not. | Check the FastAPI terminal, the Python environment, and the model cache. |
+| `offline` | FastAPI could not reach that local service. | Start that service and refresh the page. |
+
+The overall health may show `"status": "degraded"` with `"whisper": "not_loaded"` immediately after startup. That is expected because Whisper is lazy-loaded. After the first real microphone turn, the FastAPI terminal should show:
 
 ```text
 Loading Whisper model: small (cpu/int8)
 Whisper model loaded successfully
 ```
 
-If the model cannot load, the server remains available and `/health` reports the failure. The voice request returns a clear 503 instead of silently using a fake recognizer.
+After that, refresh `/health`; Whisper should say `"ready"`. Demo Mode does not load Whisper because it intentionally bypasses the microphone and local AI services.
 
-### 9. Open the browser
-
-Open:
-
-```text
-http://127.0.0.1:8000
-```
-
-The app also serves a health endpoint at `http://127.0.0.1:8000/health`.
-
-### 10. Test the microphone
+## Test the microphone
 
 1. Click **Start Interview**.
 2. Allow microphone access when the browser asks.
