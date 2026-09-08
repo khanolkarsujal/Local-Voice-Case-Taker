@@ -35,6 +35,7 @@ from .models import (
     ResponseEvent,
     StateEvent,
     TextTurnRequest,
+    TranscriptionResponse,
     TranscriptEvent,
     TranscriptEditRequest,
     TurnResponse,
@@ -237,6 +238,26 @@ async def _advance_medical_interview(session_id: str, patient_text: str) -> Inte
     return await _interview_payload(updated, response_text, transcript=patient_text)
 
 
+async def _transcribe_audio_upload(audio: UploadFile, session_id: str) -> str:
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > settings.max_audio_bytes:
+        raise HTTPException(status_code=413, detail="Audio recording is too large.")
+    try:
+        return await whisper_provider.transcribe(
+            audio_bytes,
+            suffix=Path(audio.filename or "recording.webm").suffix or ".webm",
+        )
+    except NoSpeechDetectedError as exc:
+        await connections.send(session_id, StateEvent(state="error").model_dump())
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except WhisperUnavailableError as exc:
+        await connections.send(session_id, StateEvent(state="error").model_dump())
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except STTError as exc:
+        await connections.send(session_id, StateEvent(state="error").model_dump())
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @app.post("/api/interview/start", response_model=InterviewTurnResponse)
 async def start_medical_interview(
     session_id: str = Query(default="default", min_length=1, max_length=120),
@@ -252,24 +273,18 @@ async def medical_voice_turn(
     audio: UploadFile = File(...),
     session_id: str = Query(default="default", min_length=1, max_length=120),
 ):
-    audio_bytes = await audio.read()
-    if len(audio_bytes) > settings.max_audio_bytes:
-        raise HTTPException(status_code=413, detail="Audio recording is too large.")
-    try:
-        transcript = await whisper_provider.transcribe(
-            audio_bytes,
-            suffix=Path(audio.filename or "recording.webm").suffix or ".webm",
-        )
-    except NoSpeechDetectedError as exc:
-        await connections.send(session_id, StateEvent(state="error").model_dump())
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except WhisperUnavailableError as exc:
-        await connections.send(session_id, StateEvent(state="error").model_dump())
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except STTError as exc:
-        await connections.send(session_id, StateEvent(state="error").model_dump())
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    transcript = await _transcribe_audio_upload(audio, session_id)
     return await _advance_medical_interview(session_id, transcript)
+
+
+@app.post("/api/interview/transcribe", response_model=TranscriptionResponse)
+async def transcribe_medical_answer(
+    audio: UploadFile = File(...),
+    session_id: str = Query(default="default", min_length=1, max_length=120),
+):
+    """Transcribe a patient answer without saving or advancing the case."""
+    transcript = await _transcribe_audio_upload(audio, session_id)
+    return TranscriptionResponse(session_id=session_id, transcript=transcript)
 
 
 @app.post("/api/interview/text-turn", response_model=InterviewTurnResponse)

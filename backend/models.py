@@ -153,6 +153,11 @@ class InterviewTurnResponse(BaseModel):
     is_demo: bool = False
 
 
+class TranscriptionResponse(BaseModel):
+    session_id: str
+    transcript: str
+
+
 class CaseEditRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=120)
     case: PatientCase

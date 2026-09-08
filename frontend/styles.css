@@ -338,3 +338,63 @@ em { color: var(--teal); font-style: normal; }
   .review-grid { grid-template-columns: 1fr 1fr; }
   .case-fields input, .case-fields textarea, .notes-panel textarea { border: 0; padding: 0; background: transparent; }
 }
+
+/* Focused patient interview: voice first, transcript on demand. */
+.patient-topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 28px 0 16px; }
+.patient-brand { color: var(--muted); font: 600 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .13em; }
+.mode-switch-button { border: 0; padding: 7px 0; color: var(--teal-dark); background: transparent; font-size: 11px; font-weight: 700; }
+.mode-switch-button:hover { color: var(--teal); text-decoration: underline; }
+.patient-progress-row { display: grid; grid-template-columns: auto minmax(140px, 310px) auto auto; align-items: end; justify-content: center; gap: 16px; margin: 20px auto 17px; }
+.patient-progress-row > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+.patient-progress-row .eyebrow { margin: 0; font-size: 9px; }
+.patient-progress-row strong { color: var(--heading); font-size: 12px; }
+.patient-progress-row .progress-track { width: 100%; margin-bottom: 5px; }
+.patient-progress-row .language-pill, .patient-progress-row .demo-badge { white-space: nowrap; }
+.voice-mode { display: grid; place-items: center; min-height: 590px; }
+.voice-card { width: min(760px, 100%); min-height: 490px; padding: 27px 32px 21px; border: 1px solid var(--line); border-top: 3px solid var(--teal); border-radius: 17px; background: rgba(255,255,255,.9); box-shadow: var(--shadow); }
+.voice-card-heading { display: flex; align-items: center; gap: 10px; }
+.voice-card-heading strong, .voice-card-heading small { display: block; }
+.voice-card-heading strong { color: var(--heading); font-size: 12px; }
+.voice-card-heading small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.voice-orb { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 8px; color: var(--teal); background: var(--teal-soft); font-size: 18px; line-height: 1; }
+.question-count { margin-left: auto; border-radius: 100px; padding: 7px 10px; color: var(--teal-dark); background: var(--teal-soft); font-size: 10px; }
+.question-area { min-height: 140px; margin: 53px 0 0; padding: 0; border: 0; text-align: center; }
+.question-area h2 { max-width: 650px; margin: 14px auto 0; color: var(--heading); font-size: clamp(29px, 4.5vw, 49px); line-height: 1.05; }
+.voice-answer-area { margin-top: 10px; }
+.mic-stage { height: 94px; }
+.mic-button { width: min(100%, 430px); height: 54px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 9px; box-shadow: 0 10px 22px rgba(20,125,122,.16); font-size: 12px; font-weight: 750; }
+.mic-button:hover { transform: translateY(-1px); box-shadow: 0 14px 25px rgba(20,125,122,.22); }
+.mic-button svg { width: 18px; height: 18px; stroke-width: 1.6; }
+.pulse-ring { display: none; }
+.state-block { min-height: 49px; }
+.state-label { color: var(--heading); font-size: 14px; }
+.state-block p { margin-top: 5px; font-size: 10px; }
+.voice-card-footer { display: flex; justify-content: center; gap: 8px; margin-top: 22px; padding-top: 17px; border-top: 1px solid var(--line); }
+.voice-card-footer .control-button { padding: 7px 10px; font-size: 10px; }
+.voice-card .demo-actions { margin-top: 10px; }
+.voice-card .answer-review { margin: 20px 0 0; }
+.transcript-mode { min-height: 590px; padding: 22px 0 0; }
+.transcript-mode .conversation-panel { width: min(760px, 100%); min-height: 510px; margin: 0 auto; }
+.transcript-actions { display: flex; align-items: center; gap: 15px; }
+.assistant-note { margin: 22px 0 8px; padding: 11px 13px; border-left: 2px solid var(--teal); background: var(--surface-soft); }
+.assistant-note span { color: var(--teal); font: 600 9px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .1em; }
+.assistant-note p { margin: 5px 0 0; color: var(--heading); font-size: 12px; line-height: 1.45; }
+.transcript-mode .conversation-list { min-height: 290px; }
+.patient-footnote { margin: 5px 0 0; }
+
+@media (max-width: 650px) {
+  .patient-topbar { padding-top: 18px; }
+  .patient-brand { font-size: 9px; }
+  .patient-progress-row { grid-template-columns: 1fr auto; gap: 10px; justify-content: stretch; }
+  .patient-progress-row .progress-track { grid-column: 1 / -1; grid-row: 2; width: 100%; margin: 0; }
+  .patient-progress-row .language-pill { justify-self: end; }
+  .patient-progress-row .demo-badge { grid-column: 1 / -1; justify-self: start; }
+  .voice-mode { min-height: 540px; }
+  .voice-card { min-height: 475px; padding: 21px 18px 18px; }
+  .question-area { min-height: 155px; margin-top: 45px; }
+  .question-area h2 { font-size: 29px; }
+  .mic-stage { height: 86px; }
+  .voice-card-footer { flex-wrap: wrap; }
+  .transcript-mode { padding-top: 8px; }
+  .transcript-actions { gap: 9px; }
+}

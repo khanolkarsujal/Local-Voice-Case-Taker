@@ -4,6 +4,7 @@ const state = {
   consentGiven: false,
   interviewActive: false,
   demoMode: false,
+  patientMode: "voice",
   recorder: null,
   stream: null,
   analyser: null,
@@ -36,6 +37,10 @@ const els = {
   consentCancel: $("consent-cancel-button"),
   consentCancelAction: $("consent-cancel-action"),
   patientHome: $("patient-home-button"),
+  voiceMode: $("voice-mode"),
+  transcriptMode: $("transcript-mode"),
+  voiceModeButton: $("voice-mode-button"),
+  transcriptModeButton: $("transcript-mode-button"),
   languageOptions: [...document.querySelectorAll(".language-option")],
   languageHelp: $("language-help"),
   interviewLanguage: $("interview-language-label"),
@@ -43,9 +48,8 @@ const els = {
   completionDuration: $("completion-duration"),
   completionLanguage: $("completion-language"),
   viewCase: $("view-case-button"),
-  start: $("start-button"),
-  stop: $("stop-button"),
   mic: $("mic-button"),
+  micLabel: $("mic-label"),
   micStage: document.querySelector(".mic-stage"),
   stateLabel: $("state-label"),
   stateDetail: $("state-detail"),
@@ -53,6 +57,7 @@ const els = {
   response: $("response-text"),
   progressCount: $("progress-count"),
   progressFill: $("progress-fill"),
+  questionNumber: $("question-number"),
   list: $("conversation-list"),
   form: $("text-form"),
   input: $("text-input"),
@@ -66,13 +71,6 @@ const els = {
   retryAnswer: $("retry-answer-button"),
   editAnswer: $("edit-answer-button"),
   toast: $("toast"),
-  pill: $("connection-pill"),
-  connectionLabel: $("connection-label"),
-  checked: $("last-checked"),
-  whisper: $("whisper-status"),
-  ollama: $("ollama-status"),
-  piper: $("piper-status"),
-  session: $("session-short"),
   demoBadge: $("demo-badge"),
   backToPatient: $("back-to-patient-button"),
   newInterview: $("new-interview-button"),
@@ -125,7 +123,7 @@ const caseFields = [
   ["information_not_obtained", "Information not obtained", "list"],
 ];
 
-els.session.textContent = state.sessionId.slice(0, 6).toUpperCase();
+if (els.session) els.session.textContent = state.sessionId.slice(0, 6).toUpperCase();
 
 function languageLabel() {
   return languageNames[state.language] || languageNames.en;
@@ -136,6 +134,15 @@ function setScreen(screen) {
   els.patient.hidden = screen !== "patient";
   els.completion.hidden = screen !== "completion";
   els.doctor.hidden = screen !== "doctor";
+}
+
+function setPatientMode(mode) {
+  state.patientMode = mode;
+  const voice = mode === "voice";
+  els.voiceMode.hidden = !voice;
+  els.transcriptMode.hidden = voice;
+  els.transcriptModeButton.hidden = !voice;
+  els.voiceModeButton.hidden = voice;
 }
 
 function setState(next, detail) {
@@ -161,6 +168,16 @@ function setState(next, detail) {
     }[next];
   els.micStage.classList.toggle("listening", next === "listening");
   els.mic.classList.toggle("active", next === "listening");
+  const micLabels = {
+    idle: "Tap to answer",
+    listening: "Tap to stop",
+    processing: "Processing...",
+    speaking: "Listening...",
+    error: "Try again",
+    completed: "Answer received",
+  };
+  els.micLabel.textContent = micLabels[next] || micLabels.idle;
+  els.mic.disabled = ["processing", "speaking"].includes(next);
 }
 
 function showToast(message) {
@@ -227,6 +244,7 @@ function updateProgress(payload) {
   const question = Math.min(16, Math.max(1, answered + 1));
   els.progressCount.textContent = payload.interview_complete ? "Interview complete" : `Question ${question} of 16`;
   els.progressFill.style.width = `${payload.interview_complete ? 100 : Math.max(7, Math.round((question / 16) * 100))}%`;
+  if (els.questionNumber) els.questionNumber.textContent = question;
 }
 
 function updateFromPayload(payload) {
@@ -241,18 +259,18 @@ function updateFromPayload(payload) {
     is_demo: payload.is_demo,
     language: state.language,
   };
-  els.session.textContent = payload.session_id.slice(0, 6).toUpperCase();
+  if (els.session) els.session.textContent = payload.session_id.slice(0, 6).toUpperCase();
   renderTranscript(payload.conversation);
   updateProgress(payload);
-  els.response.textContent = payload.response;
+  if (els.response) els.response.textContent = payload.response;
   els.question.textContent = payload.response;
   if (payload.audio_error) showToast("Voice playback is unavailable. You can continue with text fallback.");
   if (payload.interview_complete) {
     state.interviewActive = false;
     stopRecording();
     stopStream();
-    els.start.disabled = false;
-    els.stop.disabled = true;
+    if (els.start) els.start.disabled = false;
+    if (els.stop) els.stop.disabled = true;
     els.demoNext.hidden = true;
   }
 }
@@ -263,14 +281,14 @@ function connectWebSocket() {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
   state.ws = new WebSocket(`${protocol}//${location.host}/ws?session_id=${encodeURIComponent(connectedSession)}`);
   state.ws.onopen = () => {
-    els.connectionLabel.textContent = "Local session connected";
+    setState("idle");
   };
   state.ws.onmessage = (event) => {
     try {
       const payload = JSON.parse(event.data);
       if (payload.type === "transcript") els.stateDetail.textContent = `"${payload.text}"`;
       if (payload.type === "response") {
-        els.response.textContent = payload.text;
+        if (els.response) els.response.textContent = payload.text;
         els.question.textContent = payload.text;
       }
       if (payload.type === "state" && !els.answerReview.hidden) return;
@@ -281,33 +299,8 @@ function connectWebSocket() {
   };
   state.ws.onclose = () => {
     if (connectedSession !== state.sessionId) return;
-    els.connectionLabel.textContent = "Local session disconnected";
-    els.pill.classList.remove("online");
     if (state.interviewActive) window.setTimeout(connectWebSocket, 1500);
   };
-}
-
-async function refreshHealth() {
-  try {
-    const response = await fetch("/health");
-    const health = await response.json();
-    updateServiceStatus(els.whisper, health.whisper);
-    updateServiceStatus(els.ollama, health.ollama);
-    updateServiceStatus(els.piper, health.piper);
-    els.checked.textContent = `Checked ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    els.connectionLabel.textContent = health.status === "ok" ? "All local services online" : "Check local services";
-    els.pill.classList.toggle("online", health.status === "ok");
-    els.pill.classList.toggle("offline", health.status !== "ok");
-  } catch {
-    [els.whisper, els.ollama, els.piper].forEach((node) => updateServiceStatus(node, "offline"));
-    els.connectionLabel.textContent = "Backend unavailable";
-    els.pill.classList.add("offline");
-  }
-}
-
-function updateServiceStatus(node, value) {
-  node.textContent = value === "not_loaded" ? "not loaded" : value;
-  node.className = `service-status ${value}`;
 }
 
 function chooseMimeType() {
@@ -338,12 +331,13 @@ async function setSessionLanguage() {
 async function startInterview() {
   closeConsent();
   setScreen("patient");
+  setPatientMode("voice");
   state.demoMode = false;
   state.interviewActive = true;
   state.sessionStartedAt = Date.now();
   els.demoBadge.hidden = true;
-  els.start.disabled = true;
-  els.stop.disabled = false;
+  if (els.start) els.start.disabled = true;
+  if (els.stop) els.stop.disabled = false;
   const microphoneSupported = navigator.mediaDevices?.getUserMedia && window.MediaRecorder;
   if (microphoneSupported) {
     try {
@@ -361,8 +355,8 @@ async function startInterview() {
     await speakResponse(payload);
   } catch (error) {
     state.interviewActive = false;
-    els.start.disabled = false;
-    els.stop.disabled = true;
+    if (els.start) els.start.disabled = false;
+    if (els.stop) els.stop.disabled = true;
     setState("error");
     showToast(friendlyError(error));
   }
@@ -434,8 +428,8 @@ async function stopInterview() {
   stopRecording();
   stopStream();
   state.currentAudio?.pause();
-  els.start.disabled = false;
-  els.stop.disabled = true;
+  if (els.start) els.start.disabled = false;
+  if (els.stop) els.stop.disabled = true;
   setState("completed", "Interview paused. You can continue with text or start a new case.");
 }
 
@@ -449,15 +443,24 @@ function showAnswerReview(payload) {
     speakResponse(payload);
     return;
   }
+  setPatientMode("voice");
   state.answerReviewPayload = payload;
   els.answerReviewText.textContent = payload.transcript;
   els.answerReview.hidden = false;
+  els.mic.disabled = true;
+  els.repeat.disabled = true;
+  els.skip.disabled = true;
+  els.transcriptModeButton.disabled = true;
   setState("completed", "Please confirm the transcription before continuing.");
 }
 
 function hideAnswerReview() {
   els.answerReview.hidden = true;
   state.answerReviewPayload = null;
+  els.mic.disabled = false;
+  els.repeat.disabled = false;
+  els.skip.disabled = false;
+  els.transcriptModeButton.disabled = false;
 }
 
 function finishCompleted() {
@@ -511,16 +514,15 @@ async function sendAudio(blob) {
   const data = new FormData();
   data.append("audio", blob, "recording.webm");
   try {
-    const payload = await api(`/api/interview/turn?session_id=${encodeURIComponent(state.sessionId)}`, { method: "POST", body: data });
-    updateFromPayload(payload);
-    showAnswerReview(payload);
+    const transcription = await api(`/api/interview/transcribe?session_id=${encodeURIComponent(state.sessionId)}`, { method: "POST", body: data });
+    showAnswerReview(transcription);
   } catch (error) {
     setState("error");
     showToast(friendlyError(error));
   }
 }
 
-async function sendText(text) {
+async function sendText(text, confirmImmediately = false) {
   state.interviewActive = true;
   setState("processing");
   try {
@@ -530,7 +532,8 @@ async function sendText(text) {
       body: JSON.stringify({ text, session_id: state.sessionId }),
     });
     updateFromPayload(payload);
-    showAnswerReview(payload);
+    if (confirmImmediately) await speakResponse(payload);
+    else showAnswerReview(payload);
   } catch (error) {
     setState("error");
     showToast(friendlyError(error));
@@ -540,12 +543,13 @@ async function sendText(text) {
 async function startDemo() {
   await stopInterview();
   setScreen("patient");
+  setPatientMode("voice");
   state.demoMode = true;
   state.interviewActive = true;
   state.sessionStartedAt = Date.now();
   els.demoBadge.hidden = false;
-  els.start.disabled = true;
-  els.stop.disabled = false;
+  if (els.start) els.start.disabled = true;
+  if (els.stop) els.stop.disabled = false;
   els.demoNext.hidden = false;
   try {
     const payload = await api(`/api/interview/demo/start?session_id=${encodeURIComponent(state.sessionId)}&language=${state.language}`, { method: "POST" });
@@ -553,7 +557,7 @@ async function startDemo() {
     await speakResponse(payload);
   } catch (error) {
     state.interviewActive = false;
-    els.start.disabled = false;
+    if (els.start) els.start.disabled = false;
     showToast(friendlyError(error));
   }
 }
@@ -791,14 +795,14 @@ async function clearAndReset(showWelcomeScreen = true) {
   state.answerReviewPayload = null;
   state.lastPayload = null;
   state.sessionStartedAt = null;
-  els.session.textContent = state.sessionId.slice(0, 6).toUpperCase();
+  if (els.session) els.session.textContent = state.sessionId.slice(0, 6).toUpperCase();
   els.demoBadge.hidden = true;
   els.demoNext.hidden = true;
   els.answerReview.hidden = true;
-  els.start.disabled = false;
-  els.stop.disabled = true;
+  if (els.start) els.start.disabled = false;
+  if (els.stop) els.stop.disabled = true;
   renderTranscript([]);
-  els.response.textContent = "Your next question will appear here.";
+  if (els.response) els.response.textContent = "Your next question will appear here.";
   els.question.textContent = "When you are ready, tell me what brings you in today.";
   if (showWelcomeScreen) showWelcome();
   connectWebSocket();
@@ -806,6 +810,8 @@ async function clearAndReset(showWelcomeScreen = true) {
 }
 
 els.languageOptions.forEach((button) => button.addEventListener("click", () => updateLanguage(button.dataset.language)));
+els.transcriptModeButton.addEventListener("click", () => setPatientMode("transcript"));
+els.voiceModeButton.addEventListener("click", () => setPatientMode("voice"));
 els.welcomeStart.addEventListener("click", openConsent);
 els.welcomeDemo.addEventListener("click", async () => {
   state.consentGiven = true;
@@ -821,16 +827,28 @@ els.consentCancel.addEventListener("click", closeConsent);
 els.consentCancelAction.addEventListener("click", closeConsent);
 els.brandHome.addEventListener("click", () => clearAndReset(true));
 els.patientHome.addEventListener("click", () => clearAndReset(true));
-els.start.addEventListener("click", () => (state.consentGiven ? startInterview() : openConsent()));
-els.mic.addEventListener("click", () => (state.interviewActive ? stopInterview() : (state.consentGiven ? startInterview() : openConsent())));
-els.stop.addEventListener("click", stopInterview);
+els.mic.addEventListener("click", () => {
+  if (!state.interviewActive) {
+    if (state.consentGiven) startInterview();
+    else openConsent();
+  } else if (state.recorder?.state === "recording") {
+    stopRecording();
+  } else if (state.demoMode) {
+    nextDemoStep();
+  } else if (state.stream) {
+    startListening();
+  } else {
+    showToast("Microphone access is unavailable. Use the live transcript mode to type your answer.");
+    setPatientMode("transcript");
+  }
+});
 els.demoNext.addEventListener("click", nextDemoStep);
 els.repeat.addEventListener("click", () => state.lastPayload && speakResponse(state.lastPayload));
 els.skip.addEventListener("click", () => state.interviewActive && sendText("I prefer not to answer this question."));
 els.confirmAnswer.addEventListener("click", async () => {
   const payload = state.answerReviewPayload;
   hideAnswerReview();
-  if (payload) await speakResponse(payload);
+  if (payload?.transcript) await sendText(payload.transcript, true);
 });
 els.retryAnswer.addEventListener("click", () => {
   hideAnswerReview();
@@ -869,7 +887,6 @@ els.form.addEventListener("submit", async (event) => {
 });
 
 updateLanguage(state.language);
+setPatientMode("voice");
 setScreen("welcome");
 connectWebSocket();
-refreshHealth();
-window.setInterval(refreshHealth, 10000);

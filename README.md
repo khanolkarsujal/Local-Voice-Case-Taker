@@ -253,6 +253,7 @@ The provider boundaries make it possible to replace STT, LLM, or TTS later witho
 ## Medical API routes
 
 - `POST /api/interview/start?session_id=...` — start a real local interview and speak the opening question
+- `POST /api/interview/transcribe?session_id=...` — transcribe one microphone answer without saving it, so the patient can confirm or retry it
 - `POST /api/interview/turn?session_id=...` — transcribe a microphone recording and advance the structured interview
 - `POST /api/interview/text-turn` — text fallback for the same case-taking flow
 - `POST /api/interview/demo/start` and `POST /api/interview/demo/step` — fictional local demonstration flow
