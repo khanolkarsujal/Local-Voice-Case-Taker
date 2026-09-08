@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from .latency import elapsed_ms, log_event, now_ms
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +69,20 @@ class LocalWhisperProvider(STTProvider):
             try:
                 from faster_whisper import WhisperModel
 
+                load_started = now_ms()
                 self._model = WhisperModel(
                     self.model_name,
                     device=self.device,
                     compute_type=self.compute_type,
                 )
                 self._startup_error = None
+                log_event(
+                    "whisper_load",
+                    ms=elapsed_ms(load_started),
+                    model=self.model_name,
+                    device=self.device,
+                    compute_type=self.compute_type,
+                )
                 logger.info("Whisper model loaded successfully")
                 return True
             except Exception as exc:
@@ -96,15 +106,33 @@ class LocalWhisperProvider(STTProvider):
         return self._startup_error
 
     async def transcribe(self, audio: bytes, suffix: str = ".webm") -> str:
+        started = now_ms()
+        already_loaded = self._model is not None
+        load_ms = 0.0
         if self._model is None:
+            load_started = now_ms()
             await asyncio.to_thread(self.load)
+            load_ms = elapsed_ms(load_started)
         if not self._model:
             detail = self._startup_error or "The faster-whisper model is not loaded."
             raise WhisperUnavailableError(detail)
         if not audio:
             raise NoSpeechDetectedError("The browser sent an empty audio recording.")
 
-        return await asyncio.to_thread(self._transcribe_sync, audio, suffix)
+        infer_started = now_ms()
+        text = await asyncio.to_thread(self._transcribe_sync, audio, suffix)
+        infer_ms = elapsed_ms(infer_started)
+        log_event(
+            "stt",
+            ms=elapsed_ms(started),
+            load_ms=load_ms,
+            infer_ms=infer_ms,
+            already_loaded=already_loaded,
+            audio_bytes=len(audio),
+            suffix=suffix,
+            transcript_chars=len(text),
+        )
+        return text
 
     def _transcribe_sync(self, audio: bytes, suffix: str) -> str:
         temporary_path: Path | None = None

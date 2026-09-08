@@ -7,6 +7,8 @@ from typing import Any, TypeVar
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from .latency import elapsed_ms, log_event, now_ms
+
 
 class LLMError(RuntimeError):
     """Base error for local language-model failures."""
@@ -68,6 +70,7 @@ class OllamaProvider(LLMProvider):
         response_model: type[StructuredModel],
     ) -> StructuredModel:
         """Ask Ollama for JSON and validate it before it reaches the case store."""
+        started = now_ms()
         try:
             response = await self.client.post(
                 f"{self.base_url}/api/chat",
@@ -86,6 +89,22 @@ class OllamaProvider(LLMProvider):
                 raise LLMError("Ollama returned an empty structured response.")
             cleaned = _remove_reasoning(content)
             cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned.strip(), flags=re.IGNORECASE)
+            prompt_chars = sum(len(item.get("content", "")) for item in messages)
+            log_event(
+                "llm",
+                ms=elapsed_ms(started),
+                model=self.model,
+                format="json",
+                prompt_chars=prompt_chars,
+                prompt_messages=len(messages),
+                response_chars=len(cleaned),
+                ollama_total_ms=round((payload.get("total_duration") or 0) / 1e6, 1),
+                ollama_load_ms=round((payload.get("load_duration") or 0) / 1e6, 1),
+                prompt_eval_count=payload.get("prompt_eval_count"),
+                prompt_eval_ms=round((payload.get("prompt_eval_duration") or 0) / 1e6, 1),
+                eval_count=payload.get("eval_count"),
+                eval_ms=round((payload.get("eval_duration") or 0) / 1e6, 1),
+            )
             return response_model.model_validate_json(cleaned)
         except httpx.HTTPStatusError as exc:
             detail = exc.response.text[:500]

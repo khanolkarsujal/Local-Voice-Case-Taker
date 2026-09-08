@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 import httpx
 
+from .latency import elapsed_ms, log_event, now_ms
+
 
 class TTSError(RuntimeError):
     """Base error for local text-to-speech failures."""
@@ -26,12 +28,15 @@ class PiperProvider(TTSProvider):
         self.client = httpx.AsyncClient(timeout=timeout_seconds)
 
     async def synthesize(self, text: str) -> bytes:
+        started = now_ms()
+        retried = False
         try:
             response = await self.client.post(
                 f"{self.base_url}/synthesize",
                 json={"text": text, "voice": self.voice},
             )
             if response.status_code == 422:
+                retried = True
                 # Some Piper HTTP wrappers configure the voice server-side.
                 response = await self.client.post(
                     f"{self.base_url}/synthesize",
@@ -40,6 +45,13 @@ class PiperProvider(TTSProvider):
             response.raise_for_status()
             if not response.content:
                 raise TTSError("Piper returned an empty audio response.")
+            log_event(
+                "tts",
+                ms=elapsed_ms(started),
+                text_chars=len(text),
+                audio_bytes=len(response.content),
+                retried_without_voice=retried,
+            )
             return response.content
         except httpx.HTTPStatusError as exc:
             detail = exc.response.text[:500]

@@ -58,6 +58,10 @@ const els = {
   progressCount: $("progress-count"),
   progressFill: $("progress-fill"),
   questionNumber: $("question-number"),
+  voiceStatusTitle: $("voice-status-title"),
+  voiceStatusSub: $("voice-status-sub"),
+  progressBars: [...document.querySelectorAll(".progress-stack i")],
+  shell: document.querySelector(".app-shell"),
   list: $("conversation-list"),
   form: $("text-form"),
   input: $("text-input"),
@@ -125,6 +129,105 @@ const caseFields = [
 
 if (els.session) els.session.textContent = state.sessionId.slice(0, 6).toUpperCase();
 
+let lastVoiceCue = "";
+const uiPlayer = new Audio();
+uiPlayer.preload = "auto";
+uiPlayer.volume = 0.7;
+const uiSoundCache = {};
+
+function encodeWav(samples, sampleRate) {
+  const bytes = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + bytes);
+  const view = new DataView(buffer);
+  const ascii = (offset, text) => {
+    for (let i = 0; i < text.length; i += 1) view.setUint8(offset + i, text.charCodeAt(i));
+  };
+  ascii(0, "RIFF");
+  view.setUint32(4, 36 + bytes, true);
+  ascii(8, "WAVE");
+  ascii(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  ascii(36, "data");
+  view.setUint32(40, bytes, true);
+  let offset = 44;
+  for (let i = 0; i < samples.length; i += 1, offset += 2) {
+    view.setInt16(offset, samples[i], true);
+  }
+  return URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
+}
+
+function makeChime(notes) {
+  const sampleRate = 22050;
+  const total = Math.max(...notes.map((note) => note.start + note.dur)) + 0.03;
+  const samples = new Int16Array(Math.floor(sampleRate * total));
+  for (const note of notes) {
+    const start = Math.floor(note.start * sampleRate);
+    const count = Math.floor(note.dur * sampleRate);
+    const volume = note.vol ?? 0.38;
+    for (let i = 0; i < count; i += 1) {
+      const envelope = Math.sin((Math.PI * i) / Math.max(1, count));
+      const value = Math.sin((2 * Math.PI * note.f * i) / sampleRate) * envelope * volume;
+      const index = start + i;
+      if (index < samples.length) {
+        samples[index] = Math.max(-32767, Math.min(32767, samples[index] + value * 32767));
+      }
+    }
+  }
+  return encodeWav(samples, sampleRate);
+}
+
+function uiSoundUrl(kind) {
+  if (uiSoundCache[kind]) return uiSoundCache[kind];
+  const sounds = {
+    tap: [{ f: 720, start: 0, dur: 0.09, vol: 0.42 }],
+    listen: [
+      { f: 640, start: 0, dur: 0.11, vol: 0.4 },
+      { f: 860, start: 0.07, dur: 0.12, vol: 0.34 },
+    ],
+    captured: [{ f: 520, start: 0, dur: 0.1, vol: 0.4 }],
+    heard: [
+      { f: 523, start: 0, dur: 0.12, vol: 0.4 },
+      { f: 698, start: 0.08, dur: 0.14, vol: 0.36 },
+    ],
+    turn: [
+      { f: 523, start: 0, dur: 0.13, vol: 0.4 },
+      { f: 659, start: 0.1, dur: 0.16, vol: 0.34 },
+    ],
+    success: [
+      { f: 587, start: 0, dur: 0.11, vol: 0.4 },
+      { f: 784, start: 0.08, dur: 0.16, vol: 0.38 },
+    ],
+    error: [{ f: 220, start: 0, dur: 0.18, vol: 0.4 }],
+    complete: [
+      { f: 523, start: 0, dur: 0.13, vol: 0.38 },
+      { f: 659, start: 0.11, dur: 0.14, vol: 0.34 },
+      { f: 784, start: 0.22, dur: 0.2, vol: 0.38 },
+    ],
+  };
+  uiSoundCache[kind] = makeChime(sounds[kind] || sounds.tap);
+  return uiSoundCache[kind];
+}
+
+function playUiSound(kind) {
+  try {
+    uiPlayer.pause();
+    uiPlayer.currentTime = 0;
+    uiPlayer.src = uiSoundUrl(kind);
+    const play = uiPlayer.play();
+    if (play?.catch) play.catch(() => {});
+  } catch {
+    /* ignore blocked playback */
+  }
+}
+
+document.addEventListener("pointerdown", () => playUiSound("tap"), { once: true });
+
 function languageLabel() {
   return languageNames[state.language] || languageNames.en;
 }
@@ -134,6 +237,7 @@ function setScreen(screen) {
   els.patient.hidden = screen !== "patient";
   els.completion.hidden = screen !== "completion";
   els.doctor.hidden = screen !== "doctor";
+  if (els.shell) els.shell.dataset.screen = screen;
 }
 
 function setPatientMode(mode) {
@@ -172,12 +276,26 @@ function setState(next, detail) {
     idle: "Tap to answer",
     listening: "Tap to stop",
     processing: "Processing...",
-    speaking: "Listening...",
+    speaking: "Please listen...",
     error: "Try again",
     completed: "Answer received",
   };
   els.micLabel.textContent = micLabels[next] || micLabels.idle;
   els.mic.disabled = ["processing", "speaking"].includes(next);
+  els.mic.classList.toggle("listening-mode", next === "speaking");
+  document.querySelector(".voice-card")?.classList.toggle("is-speaking", next === "speaking");
+  if (els.voiceStatusTitle) {
+    const speaking = next === "speaking";
+    els.voiceStatusTitle.textContent = speaking ? "Speaking the question" : "Your turn to answer";
+    els.voiceStatusSub.textContent = speaking ? "Please listen for the question" : "Use your voice or type below";
+  }
+  if (next !== lastVoiceCue) {
+    if (next === "listening") playUiSound("listen");
+    else if (next === "processing" && lastVoiceCue === "listening") playUiSound("captured");
+    else if (next === "idle" && lastVoiceCue === "speaking") playUiSound("turn");
+    else if (next === "error") playUiSound("error");
+    lastVoiceCue = next;
+  }
 }
 
 function showToast(message) {
@@ -198,6 +316,7 @@ function friendlyError(error) {
 }
 
 function updateLanguage(language) {
+  if (language !== state.language) playUiSound("tap");
   state.language = language;
   els.languageOptions.forEach((button) => button.classList.toggle("active", button.dataset.language === language));
   els.interviewLanguage.textContent = languageLabel();
@@ -210,6 +329,7 @@ function updateLanguage(language) {
 }
 
 function openConsent() {
+  playUiSound("tap");
   els.consent.hidden = false;
   els.consentAgree.focus();
 }
@@ -242,9 +362,17 @@ function renderTranscript(entries = []) {
 function updateProgress(payload) {
   const answered = (payload.conversation || []).filter((entry) => entry.speaker === "patient").length;
   const question = Math.min(16, Math.max(1, answered + 1));
-  els.progressCount.textContent = payload.interview_complete ? "Interview complete" : `Question ${question} of 16`;
-  els.progressFill.style.width = `${payload.interview_complete ? 100 : Math.max(7, Math.round((question / 16) * 100))}%`;
+  els.progressCount.textContent = payload.interview_complete ? "Complete" : `${question} of 16`;
+  if (els.progressFill) {
+    els.progressFill.style.width = `${payload.interview_complete ? 100 : Math.max(7, Math.round((question / 16) * 100))}%`;
+  }
   if (els.questionNumber) els.questionNumber.textContent = question;
+  const total = els.progressBars.length || 8;
+  const filled = payload.interview_complete ? total : Math.min(total, Math.max(1, Math.ceil((question / 16) * total)));
+  els.progressBars.forEach((bar, index) => {
+    bar.classList.toggle("active", index === filled - 1);
+    bar.classList.toggle("done", index < filled - 1);
+  });
 }
 
 function updateFromPayload(payload) {
@@ -451,6 +579,7 @@ function showAnswerReview(payload) {
   els.repeat.disabled = true;
   els.skip.disabled = true;
   els.transcriptModeButton.disabled = true;
+  playUiSound("heard");
   setState("completed", "Please confirm the transcription before continuing.");
 }
 
@@ -469,6 +598,7 @@ function finishCompleted() {
   els.completionAnswers.textContent = answered || "—";
   els.completionDuration.textContent = state.sessionStartedAt ? `${Math.max(1, Math.round((Date.now() - state.sessionStartedAt) / 60000))} min` : "—";
   els.completionLanguage.textContent = languageLabel();
+  playUiSound("complete");
   setScreen("completion");
 }
 
@@ -813,12 +943,15 @@ els.languageOptions.forEach((button) => button.addEventListener("click", () => u
 els.transcriptModeButton.addEventListener("click", () => setPatientMode("transcript"));
 els.voiceModeButton.addEventListener("click", () => setPatientMode("voice"));
 els.welcomeStart.addEventListener("click", openConsent);
-els.welcomeDemo.addEventListener("click", async () => {
-  state.consentGiven = true;
-  await startDemo();
-});
-els.privacyConsent.addEventListener("click", openConsent);
+if (els.welcomeDemo) {
+  els.welcomeDemo.addEventListener("click", async () => {
+    state.consentGiven = true;
+    await startDemo();
+  });
+}
+if (els.privacyConsent) els.privacyConsent.addEventListener("click", openConsent);
 els.consentAgree.addEventListener("click", async () => {
+  playUiSound("success");
   state.consentGiven = true;
   closeConsent();
   await startInterview();
@@ -828,6 +961,7 @@ els.consentCancelAction.addEventListener("click", closeConsent);
 els.brandHome.addEventListener("click", () => clearAndReset(true));
 els.patientHome.addEventListener("click", () => clearAndReset(true));
 els.mic.addEventListener("click", () => {
+  playUiSound("tap");
   if (!state.interviewActive) {
     if (state.consentGiven) startInterview();
     else openConsent();
@@ -846,6 +980,7 @@ els.demoNext.addEventListener("click", nextDemoStep);
 els.repeat.addEventListener("click", () => state.lastPayload && speakResponse(state.lastPayload));
 els.skip.addEventListener("click", () => state.interviewActive && sendText("I prefer not to answer this question."));
 els.confirmAnswer.addEventListener("click", async () => {
+  playUiSound("success");
   const payload = state.answerReviewPayload;
   hideAnswerReview();
   if (payload?.transcript) await sendText(payload.transcript, true);

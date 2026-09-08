@@ -88,9 +88,15 @@ Ollama model: qwen3:8b
 
 ### Window 2 — start Piper
 
-Piper is the local text-to-speech HTTP service. It is not started by FastAPI, and the Piper command differs depending on which Piper HTTP wrapper you installed.
+Piper is the local text-to-speech HTTP service. It is not started by FastAPI. Keep this window open while using the application.
 
-Start the Piper HTTP command or script you already use. Configure it with:
+From the project folder, with the virtual environment active:
+
+```powershell
+python -m piper.http_server -m "C:\Users\morax\Local-Voice-Case-Taker\en_US-lessac-medium.onnx" --host 127.0.0.1 --port 5000
+```
+
+This uses the Lessac medium voice already in this project and listens at:
 
 ```text
 Address: http://127.0.0.1:5000
@@ -104,7 +110,7 @@ The service must accept JSON containing `text` and return WAV audio. This applic
 {"text":"Hello from VoiceCase AI","voice":"en_US-lessac-medium"}
 ```
 
-Some Piper wrappers choose the voice at startup and reject the `voice` property. The app automatically retries with only `{"text":"..."}` when that happens.
+This Piper server chooses the voice at startup and may reject the `voice` property. The app automatically retries with only `{"text":"..."}` when that happens.
 
 Check Piper before starting FastAPI:
 
@@ -112,7 +118,7 @@ Check Piper before starting FastAPI:
 Invoke-RestMethod http://127.0.0.1:5000/health
 ```
 
-If `/health` is not provided by your wrapper, opening `http://127.0.0.1:5000/` or checking the Piper terminal is also acceptable. The VoiceCase health check accepts either a successful `/health` or `/` response.
+If `/health` is not provided, opening `http://127.0.0.1:5000/` or checking the Piper terminal is also acceptable. The VoiceCase health check accepts either a successful `/health` or `/` response.
 
 ### Window 3 — start FastAPI
 
@@ -270,7 +276,7 @@ The provider boundaries make it possible to replace STT, LLM, or TTS later witho
 
 - **Whisper unavailable:** check the FastAPI terminal and `/health`. The model is loaded once on the first transcription request and must be installed/cached locally.
 - **Ollama offline/model missing:** make sure Ollama is running and `ollama list` includes `qwen3:8b`.
-- **Piper offline/voice missing:** confirm the Piper server is listening on port 5000 and has the Lessac voice installed.
+- **Piper offline/voice missing:** start Piper with `python -m piper.http_server -m "C:\Users\morax\Local-Voice-Case-Taker\en_US-lessac-medium.onnx" --host 127.0.0.1 --port 5000` and confirm it is listening on port 5000.
 - **AI service unavailable:** check Ollama and confirm `qwen3:8b` is installed. Demo Mode remains available without Ollama.
 - **Voice service unavailable:** check Piper. The text fallback can continue the interview without spoken output.
 - **No speech detected:** speak closer to the microphone, reduce background noise, and pause after your sentence.

@@ -3,53 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f8fb" />
+    <meta name="theme-color" content="#f4f7f4" />
     <meta name="description" content="VoiceCase AI — voice-based patient case-taking, structured for professional review." />
     <title>VoiceCase AI — Patient Case-Taking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
-    <main class="app-shell">
+    <main class="app-shell" data-screen="welcome">
       <header class="topbar">
         <button class="brand brand-button" id="brand-home-button" aria-label="Return to VoiceCase AI welcome">
           <span class="brand-mark" aria-hidden="true">
-            <span class="brand-mark-cross"></span>
-            <span class="brand-mark-pulse"></span>
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M6 11c2.4-3.2 4.8-3.2 7.2 0s4.8 3.2 7.2 0 4.8-3.2 7.2 0" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/>
+              <path d="M6 16c2.4-3.2 4.8-3.2 7.2 0s4.8 3.2 7.2 0 4.8-3.2 7.2 0" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/>
+              <path d="M6 21c2.4-3.2 4.8-3.2 7.2 0s4.8 3.2 7.2 0 4.8-3.2 7.2 0" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/>
+            </svg>
           </span>
           <span>
-            <span class="brand-name">VoiceCase <b>AI</b></span>
-            <span class="brand-tagline">Structured patient stories for professional review</span>
+            <span class="brand-name">VoiceCase</span>
+            <span class="brand-tagline">Patient interview</span>
           </span>
         </button>
         <div class="header-actions">
-          <span class="privacy-chip">PRIVATE BY DESIGN</span>
+          <span class="live-chip patient-only"><i></i> Interview in progress</span>
+          <button class="end-interview patient-only" id="patient-home-button" type="button">End interview <span></span></button>
         </div>
       </header>
 
-      <section class="safety-banner">
-        <span class="safety-shield" aria-hidden="true">+</span>
-        <span><strong>Information collection assistant.</strong> VoiceCase AI does not diagnose or recommend treatment. A qualified healthcare professional must review all information.</span>
-      </section>
-
       <section id="welcome-view" class="welcome-view">
         <div class="welcome-copy">
-          <p class="eyebrow">PATIENT INTAKE, MADE HUMAN</p>
-          <h1>Let the patient tell their story <em>before</em> they enter the consultation room.</h1>
-          <p class="welcome-lede">VoiceCase AI collects a patient’s history through a calm, guided voice interview and prepares it for professional review.</p>
+          <p class="calm-badge">A calm place to share what you are feeling</p>
+          <h1>Your story, <em>in</em> your words.</h1>
+          <p class="welcome-lede">A quiet, guided interview that helps you describe what is happening, in the way that feels most natural to you.</p>
 
           <div class="welcome-actions">
             <button class="primary-button large-button" id="welcome-start-button">
-              <span class="button-icon">→</span>
-              Start Interview
-            </button>
-            <button class="secondary-button large-button" id="welcome-demo-button">
-              Start Demo Patient
+              <span class="play-icon" aria-hidden="true"></span>
+              Start interview
+              <span class="arrow-icon" aria-hidden="true">→</span>
             </button>
           </div>
+          <p class="welcome-micro">Usually takes a few minutes · You can stop at any time.</p>
 
           <div class="welcome-controls">
             <div class="language-control">
-              <span class="eyebrow">INTERVIEW LANGUAGE</span>
+              <span class="eyebrow">Interview language</span>
               <div class="language-options" role="group" aria-label="Interview language">
                 <button class="language-option active" data-language="en">English</button>
                 <button class="language-option" data-language="hi">हिन्दी</button>
@@ -57,73 +58,76 @@
               </div>
               <small id="language-help">Choose the language you prefer for this interview.</small>
             </div>
-            <button class="quiet-link" id="privacy-consent-link">Privacy &amp; consent <span>↗</span></button>
-          </div>
-
-          <div class="trust-row" aria-label="Product capabilities">
-            <span><b>01</b> Multilingual</span>
-            <span><b>02</b> Voice-based</span>
-            <span><b>03</b> Structured history</span>
-            <span><b>04</b> Clinician reviewed</span>
           </div>
         </div>
 
-        <div class="welcome-visual" aria-label="VoiceCase AI workflow">
+        <div class="welcome-visual" aria-label="How the interview works">
           <div class="visual-header">
-            <span class="eyebrow">THE JOURNEY</span>
-            <span class="visual-status"><i></i> Ready to begin</span>
+            <span class="eyebrow">How it works</span>
+            <span class="steps-chip">3 simple steps</span>
           </div>
           <div class="journey">
             <div class="journey-step active">
               <span class="journey-number">01</span>
-              <span><strong>Patient</strong><small>tells their story</small></span>
-              <b>↗</b>
+              <span><strong>You speak, in your own words</strong><small>Share what you are feeling, at your own pace.</small></span>
             </div>
-            <div class="journey-line"></div>
             <div class="journey-step">
               <span class="journey-number">02</span>
-              <span><strong>VoiceCase AI</strong><small>structures the history</small></span>
-              <b>↗</b>
+              <span><strong>We listen, one question at a time</strong><small>A short, calm interview. Nothing extra.</small></span>
             </div>
-            <div class="journey-line"></div>
             <div class="journey-step">
               <span class="journey-number">03</span>
-              <span><strong>Clinician</strong><small>reviews the case</small></span>
-              <b>↗</b>
+              <span><strong>A clinician reviews the summary</strong><small>Your story is prepared for professional review.</small></span>
             </div>
           </div>
-          <div class="visual-footnote"><span class="shield-mini">✓</span> Audio and case information stay on this computer by default.</div>
+          <div class="visual-footnote">
+            <span class="info-icon" aria-hidden="true">i</span>
+            This is not medical advice. A qualified clinician reviews everything before any decisions are made.
+          </div>
         </div>
       </section>
 
-      <section id="patient-view" hidden>
-        <div class="patient-topbar">
-          <button class="quiet-link" id="patient-home-button">← Welcome</button>
-          <span class="patient-brand">PATIENT INTERVIEW</span>
-          <button class="mode-switch-button" id="transcript-mode-button">View live transcript</button>
-        </div>
-        <div class="patient-progress-row">
-          <div>
-            <span class="eyebrow">GUIDED INTERVIEW</span>
-            <strong id="progress-count">Question 1 of 16</strong>
-          </div>
-          <div class="progress-track"><span id="progress-fill"></span></div>
-          <span class="language-pill" id="interview-language-label">English</span>
-          <span class="demo-badge" id="demo-badge" hidden>DEMO DATA</span>
-        </div>
+      <footer class="page-status welcome-only">
+        <span><i class="dot teal"></i> Voice playback ready</span>
+        <span><i class="dot mint"></i> Voice responses ready</span>
+      </footer>
 
+      <section id="patient-view" hidden>
+        <div class="patient-layout">
+          <aside class="patient-aside">
+            <p class="eyebrow">Guided interview</p>
+            <h1>One question at a time.</h1>
+            <div class="progress-block">
+              <span class="eyebrow">Progress</span>
+              <strong id="progress-count">1 of 16</strong>
+              <div class="progress-stack" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <span id="progress-fill" hidden></span>
+            </div>
+            <span class="language-pill" id="interview-language-label">English</span>
+            <span class="demo-badge" id="demo-badge" hidden>Demo data</span>
+            <div class="privacy-box">
+              <span class="shield-mini" aria-hidden="true"></span>
+              Your responses stay in this interview and are shown back to you at the end.
+            </div>
+          </aside>
+
+          <div class="patient-main">
+            <div class="patient-card-tools">
+              <button class="mode-switch-button" id="transcript-mode-button">View live transcript</button>
+            </div>
         <div id="voice-mode" class="voice-mode">
           <section class="voice-card">
             <div class="voice-card-heading">
-              <div class="voice-orb" aria-hidden="true">≋</div>
+              <div class="voice-orb" aria-hidden="true"></div>
               <div>
-                <strong>Your turn to answer</strong>
-                <small>Use your voice or type below</small>
+                <strong id="voice-status-title">Your turn to answer</strong>
+                <small id="voice-status-sub">Use your voice or type below</small>
               </div>
               <span class="question-count">Question <b id="question-number">1</b></span>
             </div>
             <div class="question-area">
-              <span class="question-label">VOICECASE AI ASKS</span>
               <h2 id="question-text">When you are ready, tell me what brings you in today.</h2>
             </div>
             <div class="voice-answer-area">
@@ -144,19 +148,19 @@
               </div>
             </div>
             <div class="voice-card-footer">
-              <button class="control-button" id="repeat-button"><span>↻</span> Repeat question</button>
-              <button class="control-button" id="skip-button">Skip question <span>→</span></button>
+              <button class="control-button" id="repeat-button">Repeat question</button>
+              <button class="control-button" id="skip-button">Skip question</button>
             </div>
             <div class="demo-actions">
-              <button class="demo-button next" id="demo-next-button" hidden>Next demo answer <span>→</span></button>
+              <button class="demo-button next" id="demo-next-button" hidden>Next demo answer</button>
             </div>
             <div class="answer-review" id="answer-review" hidden>
               <div>
-                <span class="review-label">WE HEARD</span>
+                <span class="review-label">We heard</span>
                 <p id="answer-review-text"></p>
               </div>
               <div class="answer-review-actions">
-                <button class="confirm-button" id="confirm-answer-button">Confirm answer <span>✓</span></button>
+                <button class="confirm-button" id="confirm-answer-button">Confirm answer</button>
                 <button class="review-action" id="retry-answer-button">Try again</button>
                 <button class="review-action" id="edit-answer-button">Edit</button>
               </div>
@@ -197,22 +201,27 @@
             </form>
           </section>
         </div>
+          </div>
+        </div>
 
-        <div class="patient-footnote"><span class="shield-mini">✓</span> AI-assisted transcription · Information should be reviewed by a qualified healthcare professional.</div>
+        <div class="patient-footnote">
+          <span>Take the time you need.</span>
+          <span>Responses only · No medical advice</span>
+        </div>
       </section>
 
       <section id="completion-view" class="completion-view" hidden>
         <div class="completion-card">
           <div class="completion-icon">✓</div>
           <p class="eyebrow">INTERVIEW COMPLETE</p>
-          <h1>Your story is ready<br /><em>for review.</em></h1>
+          <h1>Your story is ready <em>for review.</em></h1>
           <p class="completion-copy">Thank you. Your information has been recorded and prepared for review by a healthcare professional.</p>
           <div class="completion-stats">
             <div><strong id="completion-answers">—</strong><span>Questions answered</span></div>
             <div><strong id="completion-duration">—</strong><span>Interview duration</span></div>
             <div><strong id="completion-language">English</strong><span>Language</span></div>
           </div>
-          <button class="primary-button large-button" id="view-case-button">View Case Summary <span>→</span></button>
+          <button class="primary-button large-button" id="view-case-button">View case summary <span class="arrow-icon">→</span></button>
           <p class="completion-disclaimer">AI-assisted information. Review by a qualified healthcare professional is required.</p>
         </div>
       </section>
@@ -303,6 +312,6 @@
 
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </main>
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v=sounds-2"></script>
   </body>
 </html>

@@ -21,6 +21,7 @@ from .case_taking import (
 from .config import settings
 from .conversation import ConversationStore
 from .health import get_health
+from .latency import elapsed_ms, log_event, now_ms
 from .llm import LLMError, OllamaProvider
 from .models import (
     AudioEvent,
@@ -171,12 +172,16 @@ async def _interview_payload(
     response_text: str,
     transcript: str = "",
     use_audio: bool = True,
+    tts_started: float | None = None,
 ) -> InterviewTurnResponse:
     audio = b""
     audio_error: str | None = None
+    tts_ms = 0.0
     if use_audio and not session.is_demo:
         try:
+            tts_mark = tts_started or now_ms()
             audio = await piper_provider.synthesize(response_text)
+            tts_ms = elapsed_ms(tts_mark)
         except TTSError as exc:
             audio_error = str(exc)
             await connections.send(session.session_id, StateEvent(state="error").model_dump())
@@ -188,6 +193,14 @@ async def _interview_payload(
     )
     if audio:
         await connections.send(session.session_id, AudioEvent().model_dump())
+    if tts_ms:
+        log_event(
+            "tts_stage",
+            ms=tts_ms,
+            session_id=session.session_id,
+            text_chars=len(response_text),
+            audio_bytes=len(audio),
+        )
     return InterviewTurnResponse(
         session_id=session.session_id,
         transcript=transcript,
@@ -203,21 +216,32 @@ async def _interview_payload(
     )
 
 
-async def _advance_medical_interview(session_id: str, patient_text: str) -> InterviewTurnResponse:
+async def _advance_medical_interview(
+    session_id: str,
+    patient_text: str,
+    stt_ms: float = 0.0,
+) -> InterviewTurnResponse:
+    started = now_ms()
     session = interview_store.ensure(session_id)
     session = interview_store.record_patient(session_id, patient_text)
     await connections.send(session_id, TranscriptEvent(text=patient_text).model_dump())
     await connections.send(session_id, StateEvent(state="processing").model_dump())
+    other_before_llm_ms = elapsed_ms(started)
 
+    llm_started = now_ms()
+    messages = build_medical_messages(session, patient_text)
+    prompt_chars = sum(len(item.get("content", "")) for item in messages)
     try:
         decision = await ollama_provider.structured(
-            build_medical_messages(session, patient_text),
+            messages,
             InterviewDecision,
         )
     except LLMError as exc:
         await connections.send(session_id, StateEvent(state="error").model_dump())
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    llm_ms = elapsed_ms(llm_started)
 
+    post_started = now_ms()
     question = decision.next_question.strip()
     asked = {item.casefold() for item in session.asked_questions}
     if not decision.interview_complete and (not question or question.casefold() in asked):
@@ -235,18 +259,42 @@ async def _advance_medical_interview(session_id: str, patient_text: str) -> Inte
         )
     else:
         response_text = question
-    return await _interview_payload(updated, response_text, transcript=patient_text)
+    other_ms = other_before_llm_ms + elapsed_ms(post_started)
+
+    tts_started = now_ms()
+    payload = await _interview_payload(updated, response_text, transcript=patient_text)
+    tts_ms = elapsed_ms(tts_started)
+    total_ms = elapsed_ms(started) + stt_ms
+    log_event(
+        "turn",
+        session_id=session_id,
+        stt_ms=round(stt_ms, 1),
+        llm_ms=round(llm_ms, 1),
+        tts_ms=round(tts_ms, 1),
+        other_ms=round(other_ms, 1),
+        total_ms=round(total_ms, 1),
+        prompt_chars=prompt_chars,
+        transcript_entries=len(updated.transcript),
+        asked_questions=len(updated.asked_questions),
+        answer_chars=len(patient_text),
+        question_chars=len(response_text),
+        llm_calls=1,
+        interview_complete=updated.status == "completed",
+    )
+    return payload
 
 
-async def _transcribe_audio_upload(audio: UploadFile, session_id: str) -> str:
+async def _transcribe_audio_upload(audio: UploadFile, session_id: str) -> tuple[str, float]:
+    started = now_ms()
     audio_bytes = await audio.read()
     if len(audio_bytes) > settings.max_audio_bytes:
         raise HTTPException(status_code=413, detail="Audio recording is too large.")
     try:
-        return await whisper_provider.transcribe(
+        text = await whisper_provider.transcribe(
             audio_bytes,
             suffix=Path(audio.filename or "recording.webm").suffix or ".webm",
         )
+        return text, elapsed_ms(started)
     except NoSpeechDetectedError as exc:
         await connections.send(session_id, StateEvent(state="error").model_dump())
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -273,8 +321,8 @@ async def medical_voice_turn(
     audio: UploadFile = File(...),
     session_id: str = Query(default="default", min_length=1, max_length=120),
 ):
-    transcript = await _transcribe_audio_upload(audio, session_id)
-    return await _advance_medical_interview(session_id, transcript)
+    transcript, stt_ms = await _transcribe_audio_upload(audio, session_id)
+    return await _advance_medical_interview(session_id, transcript, stt_ms=stt_ms)
 
 
 @app.post("/api/interview/transcribe", response_model=TranscriptionResponse)
@@ -283,7 +331,8 @@ async def transcribe_medical_answer(
     session_id: str = Query(default="default", min_length=1, max_length=120),
 ):
     """Transcribe a patient answer without saving or advancing the case."""
-    transcript = await _transcribe_audio_upload(audio, session_id)
+    transcript, stt_ms = await _transcribe_audio_upload(audio, session_id)
+    log_event("transcribe_only", session_id=session_id, stt_ms=round(stt_ms, 1), transcript_chars=len(transcript))
     return TranscriptionResponse(session_id=session_id, transcript=transcript)
 
 
