@@ -1,44 +1,50 @@
-# [Project name]
+# Local Real-Time Voice Chatbot
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A local-only browser voice loop that transcribes microphone audio with faster-whisper, answers with Ollama, and speaks the response with Piper.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload` — run the local voice app
+- `python -m compileall -q backend` — check Python syntax
+- `node --check frontend/app.js` — check browser JavaScript syntax
+- Required local services: Ollama on `127.0.0.1:11434`, Piper on `127.0.0.1:5000`, and a cached faster-whisper model
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Python, FastAPI, Uvicorn, Pydantic, httpx
+- STT: faster-whisper large-v3
+- LLM: local Ollama qwen3:8b
+- TTS: local Piper en_US-lessac-medium
+- Frontend: HTML, CSS, browser MediaRecorder, WebSocket state events
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `backend/main.py` — FastAPI routes, lifecycle, WebSocket updates, and static frontend serving
+- `backend/stt.py`, `backend/llm.py`, `backend/tts.py` — provider interfaces and local implementations
+- `backend/conversation.py` — bounded in-memory history per browser session
+- `frontend/` — voice-first interface and microphone/audio loop
+- `.env.example` and `README.md` — local configuration and exact Windows setup
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Provider interfaces keep STT, LLM, and TTS replaceable without changing the conversation flow.
+- Whisper loads once in FastAPI lifespan; failures leave the server available so `/health` can explain what is missing.
+- Audio turns use a simple REST upload/response loop; the WebSocket is reserved for lightweight state and transcript updates.
+- The app binds to local service addresses by default and does not expose Ollama or Piper.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Start a voice interview, automatically stop after a short pause, view the live transcript and response, hear local Piper audio, continue the conversation, use text as a fallback, clear the session, and inspect the health of all three local providers.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+The final application is intended to run on the user's Windows computer, not against hosted/cloud AI services.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Install dependencies inside a Windows virtual environment before starting FastAPI.
+- The browser needs microphone permission and a secure/local origin; `127.0.0.1` is supported.
+- The Piper HTTP wrapper must expose `POST /synthesize`; the app accepts either per-request voice selection or a server-configured voice.
 
 ## Pointers
 

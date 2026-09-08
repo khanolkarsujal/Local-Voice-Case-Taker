@@ -1,0 +1,367 @@
+BUILD PROMPT 1/2 — LOCAL REAL-TIME VOICE CHATBOT
+
+Build the first part of a REAL working local-first voice chatbot in Python.
+
+IMPORTANT:
+Do NOT create a fake/mock voice system.
+Build the actual architecture and integrations.
+
+GOAL:
+
+Create this working pipeline:
+
+MICROPHONE
+↓
+FastAPI backend
+↓
+faster-whisper large-v3
+↓
+Speech-to-text
+↓
+Ollama Qwen3 8B
+↓
+AI response
+↓
+Piper TTS
+↓
+WAV audio
+↓
+Browser speaker
+
+Everything must work locally on my Windows PC.
+
+NO CLOUD AI.
+
+Do NOT use:
+- OpenAI API
+- ChatGPT API
+- ElevenLabs
+- Google Cloud Speech
+- Azure Speech
+- AWS AI
+- Any paid AI API
+- Any external AI inference service
+
+LOCAL SERVICES ALREADY INSTALLED:
+
+OLLAMA:
+URL = http://127.0.0.1:11434
+Model = qwen3:8b
+API = POST /api/chat
+
+PIPER:
+URL = http://127.0.0.1:5000
+Voice = en_US-lessac-medium
+API = POST /synthesize
+
+FASTER-WHISPER:
+Installed locally.
+Model = large-v3
+
+Default configuration:
+
+WHISPER_MODEL=large-v3
+WHISPER_DEVICE=cpu
+WHISPER_COMPUTE_TYPE=int8
+
+Allow CUDA later:
+
+WHISPER_DEVICE=cuda
+WHISPER_COMPUTE_TYPE=float16
+
+REPLIT:
+
+I am using Replit to generate and edit the code.
+
+The final application will run locally on Windows.
+
+IMPORTANT:
+Replit's hosted environment cannot directly access my Windows localhost services.
+
+Therefore create the application so LOCAL mode uses:
+
+OLLAMA_URL=http://127.0.0.1:11434
+PIPER_URL=http://127.0.0.1:5000
+
+Do not expose these services publicly.
+
+TECH STACK:
+
+Backend:
+- Python
+- FastAPI
+- Uvicorn
+- Pydantic
+- httpx
+- faster-whisper
+- WebSocket where useful
+
+Frontend:
+- HTML
+- CSS
+- JavaScript
+
+Keep dependencies simple.
+
+PROJECT STRUCTURE:
+
+backend/
+    main.py
+    config.py
+    stt.py
+    llm.py
+    tts.py
+    conversation.py
+    models.py
+    health.py
+
+frontend/
+    index.html
+    styles.css
+    app.js
+
+.env.example
+requirements.txt
+README.md
+
+MODULAR ARCHITECTURE:
+
+Create provider interfaces/classes for:
+
+STTProvider
+LLMProvider
+TTSProvider
+
+Create local implementations:
+
+LocalWhisperProvider
+OllamaProvider
+PiperProvider
+
+The architecture must allow replacing providers later without rewriting the application.
+
+STT:
+
+Use faster-whisper.
+
+Load the Whisper model ONCE when the backend starts.
+
+Never reload it for every request.
+
+Use:
+
+WhisperModel(
+    "large-v3",
+    device=WHISPER_DEVICE,
+    compute_type=WHISPER_COMPUTE_TYPE
+)
+
+The browser must be able to send recorded microphone audio to FastAPI.
+
+Transcribe it locally.
+
+Handle:
+- no speech
+- silence
+- background noise
+- invalid audio
+- transcription failure
+
+OLLAMA:
+
+Use:
+
+POST http://127.0.0.1:11434/api/chat
+
+Model:
+
+qwen3:8b
+
+Maintain conversation history.
+
+Reuse HTTP clients.
+
+Do not expose internal chain-of-thought.
+
+PIPER:
+
+Use:
+
+POST http://127.0.0.1:5000/synthesize
+
+Voice:
+
+en_US-lessac-medium
+
+Receive WAV audio and send it to the browser.
+
+Do NOT use browser cloud TTS.
+
+VOICE EXPERIENCE:
+
+User clicks:
+
+START INTERVIEW
+
+Then:
+
+1. Browser requests microphone permission.
+2. User speaks.
+3. Audio is recorded.
+4. Audio is sent to FastAPI.
+5. Faster-whisper transcribes it.
+6. Transcript is displayed.
+7. Transcript is sent to Ollama.
+8. Ollama generates a response.
+9. Response is sent to Piper.
+10. Piper returns WAV.
+11. Browser automatically plays WAV.
+12. Conversation continues.
+
+UI STATES:
+
+IDLE
+LISTENING
+PROCESSING
+SPEAKING
+ERROR
+COMPLETED
+
+Show clear indicators:
+
+"Listening..."
+"Processing..."
+"Speaking..."
+
+UI:
+
+Create a modern professional interface with:
+
+- Start Interview
+- Stop Interview
+- Clear Conversation
+- Large microphone button
+- Microphone status
+- Current AI response
+- Live transcript
+- Conversation history
+- Connection status
+- Error messages
+
+Keep text input as a fallback, but normal operation should be voice-first.
+
+WEBSOCKET:
+
+Use WebSocket where useful for state updates.
+
+Possible events:
+
+{
+  "type": "state",
+  "state": "listening"
+}
+
+{
+  "type": "transcript",
+  "text": "..."
+}
+
+{
+  "type": "response",
+  "text": "..."
+}
+
+{
+  "type": "audio",
+  "url": "..."
+}
+
+Do not over-engineer streaming yet.
+
+First priority:
+RELIABLE END-TO-END VOICE LOOP.
+
+HEALTH CHECK:
+
+Create:
+
+GET /health
+
+Check:
+
+- Ollama
+- Piper
+- Whisper
+
+Return:
+
+{
+  "status": "ok",
+  "ollama": "online",
+  "piper": "online",
+  "whisper": "ready"
+}
+
+Show these statuses in the frontend.
+
+ERROR HANDLING:
+
+Handle:
+
+- Ollama offline
+- Piper offline
+- Whisper unavailable
+- Whisper model missing
+- Ollama model missing
+- Piper voice missing
+- Microphone permission denied
+- No speech detected
+- Invalid audio
+- API timeout
+- TTS failure
+
+Never crash the application.
+
+README:
+
+Create exact Windows instructions for:
+
+1. Create virtual environment
+2. Activate environment
+3. Install dependencies
+4. Verify faster-whisper
+5. Verify Ollama
+6. Verify qwen3:8b
+7. Start Piper
+8. Start FastAPI
+9. Open browser
+10. Test microphone
+
+Also explain:
+
+Replit is being used for development.
+The final application must run locally because the AI services are on Windows localhost.
+
+IMPORTANT:
+
+Do not stop after creating the UI.
+
+Implement the actual:
+
+Microphone
+→ faster-whisper
+→ Ollama
+→ Piper
+→ Speaker
+
+Before finishing:
+- Check Python syntax
+- Check imports
+- Check FastAPI startup
+- Check /health
+- Check provider initialization
+- Fix obvious errors
+
+Do NOT implement the medical case-taking logic yet.
+
+PROMPT 2 will add the medical patient case-taking system on top of this working voice foundation.

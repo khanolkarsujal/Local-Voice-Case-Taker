@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101322" />
+    <title>Local Voice Interview</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div>
+            <p class="eyebrow">LOCAL VOICE LAB</p>
+            <h1>Voice Interview</h1>
+          </div>
+        </div>
+        <div class="connection-pill" id="connection-pill">
+          <span class="status-dot"></span>
+          <span id="connection-label">Checking local services</span>
+        </div>
+      </header>
+
+      <section class="hero-grid">
+        <section class="control-panel panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">REAL-TIME SESSION</p>
+              <h2>Speak naturally.<br /><em>Stay local.</em></h2>
+            </div>
+            <span class="session-tag">SESSION <strong id="session-short">—</strong></span>
+          </div>
+
+          <div class="mic-stage">
+            <div class="pulse-ring ring-one"></div>
+            <div class="pulse-ring ring-two"></div>
+            <button class="mic-button" id="mic-button" aria-label="Start interview">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 14.75a3.25 3.25 0 0 0 3.25-3.25V6a3.25 3.25 0 0 0-6.5 0v5.5A3.25 3.25 0 0 0 12 14.75Z"/>
+                <path d="M18.25 11.5a6.25 6.25 0 0 1-12.5 0M12 17.75V21M8.75 21h6.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="state-block">
+            <div class="state-label" id="state-label">Ready when you are</div>
+            <p id="state-detail">Press start and speak in your normal voice.</p>
+          </div>
+          <div class="control-actions">
+            <button class="primary-button" id="start-button">Start Interview</button>
+            <button class="secondary-button" id="stop-button" disabled>Stop Interview</button>
+          </div>
+          <p class="privacy-note"><span class="lock-icon">⌁</span> Audio stays on this computer.</p>
+        </section>
+
+        <section class="conversation-panel panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">LIVE TRANSCRIPT</p>
+              <h2>Conversation</h2>
+            </div>
+            <button class="text-button" id="clear-button">Clear all</button>
+          </div>
+          <div class="current-response" id="current-response">
+            <span class="response-label">AI RESPONSE</span>
+            <p id="response-text">Your assistant’s response will appear here after you speak.</p>
+          </div>
+          <div class="conversation-list" id="conversation-list">
+            <div class="empty-state" id="empty-state">
+              <div class="empty-line"></div>
+              <p>Your conversation will build here.</p>
+              <span>Nothing leaves your local machine.</span>
+            </div>
+          </div>
+          <form class="text-fallback" id="text-form">
+            <label for="text-input">Text fallback</label>
+            <div class="text-row">
+              <input id="text-input" type="text" placeholder="Type if your microphone is unavailable..." autocomplete="off" />
+              <button type="submit" aria-label="Send text">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8-3-8Zm3 8h10"/></svg>
+              </button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="bottom-grid">
+        <section class="panel status-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">SYSTEM CHECK</p>
+              <h2>Local services</h2>
+            </div>
+            <span class="refresh-label" id="last-checked">Not checked</span>
+          </div>
+          <div class="service-list">
+            <div class="service-row"><span class="service-name"><i class="service-icon">W</i> Whisper</span><span class="service-status" id="whisper-status">Checking</span></div>
+            <div class="service-row"><span class="service-name"><i class="service-icon">O</i> Ollama <small>qwen3:8b</small></span><span class="service-status" id="ollama-status">Checking</span></div>
+            <div class="service-row"><span class="service-name"><i class="service-icon">P</i> Piper <small>lessac-medium</small></span><span class="service-status" id="piper-status">Checking</span></div>
+          </div>
+        </section>
+        <section class="panel tip-panel">
+          <div class="tip-icon">i</div>
+          <div>
+            <p class="eyebrow">QUICK TIP</p>
+            <p>For the clearest transcription, keep your microphone about a hand’s length away and pause briefly when you finish speaking.</p>
+          </div>
+        </section>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
