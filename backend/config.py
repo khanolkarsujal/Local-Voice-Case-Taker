@@ -28,7 +28,7 @@ class Settings:
     ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen3:8b")
     piper_url: str = os.getenv("PIPER_URL", "http://127.0.0.1:5000").rstrip("/")
     piper_voice: str = os.getenv("PIPER_VOICE", "en_US-lessac-medium")
-    whisper_model: str = os.getenv("WHISPER_MODEL", "large-v3")
+    whisper_model: str = os.getenv("WHISPER_MODEL", "small")
     whisper_device: str = os.getenv("WHISPER_DEVICE", "cpu")
     whisper_compute_type: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
     request_timeout_seconds: float = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "120"))

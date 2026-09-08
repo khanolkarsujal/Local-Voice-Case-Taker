@@ -12,7 +12,7 @@ A local-only browser voice loop that transcribes microphone audio with faster-wh
 ## Stack
 
 - Python, FastAPI, Uvicorn, Pydantic, httpx
-- STT: faster-whisper large-v3
+- STT: faster-whisper small by default, configured for CPU/int8
 - LLM: local Ollama qwen3:8b
 - TTS: local Piper en_US-lessac-medium
 - Frontend: HTML, CSS, browser MediaRecorder, WebSocket state events
@@ -28,7 +28,7 @@ A local-only browser voice loop that transcribes microphone audio with faster-wh
 ## Architecture decisions
 
 - Provider interfaces keep STT, LLM, and TTS replaceable without changing the conversation flow.
-- Whisper loads once in FastAPI lifespan; failures leave the server available so `/health` can explain what is missing.
+- Whisper loads lazily once on the first transcription request; failures leave the server available so `/health` can explain what is missing.
 - Audio turns use a simple REST upload/response loop; the WebSocket is reserved for lightweight state and transcript updates.
 - The app binds to local service addresses by default and does not expose Ollama or Piper.
 

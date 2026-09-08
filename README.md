@@ -3,7 +3,7 @@
 This project is a local-first patient case-taking assistant for Windows:
 
 ```text
-Microphone → FastAPI → faster-whisper large-v3 → Ollama qwen3:8b
+Microphone → FastAPI → faster-whisper small (CPU/int8) → Ollama qwen3:8b
            → Piper en_US-lessac-medium → WAV → browser speaker
 ```
 
@@ -40,12 +40,12 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Verify faster-whisper
+### 4. Download and verify faster-whisper
 
-The first model load can take time if `large-v3` has not been cached yet:
+For this CPU-only laptop, use the `small` model with CPU `int8` inference. Download/cache it once with:
 
 ```powershell
-python -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', compute_type='int8'); print('faster-whisper is ready')"
+python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8'); print('faster-whisper small is ready')"
 ```
 
 ### 5. Verify Ollama is running
@@ -81,7 +81,14 @@ With the virtual environment active:
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-The first startup loads `large-v3` once. It is not reloaded for each recording.
+FastAPI starts without waiting for Whisper. The first voice transcription request loads `small` once; later recordings reuse that same in-memory model. The terminal should show:
+
+```text
+Loading Whisper model: small (cpu/int8)
+Whisper model loaded successfully
+```
+
+If the model cannot load, the server remains available and `/health` reports the failure. The voice request returns a clear 503 instead of silently using a fake recognizer.
 
 ### 9. Open the browser
 
@@ -127,16 +134,17 @@ OLLAMA_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen3:8b
 PIPER_URL=http://127.0.0.1:5000
 PIPER_VOICE=en_US-lessac-medium
-WHISPER_MODEL=large-v3
+WHISPER_MODEL=small
 WHISPER_DEVICE=cpu
 WHISPER_COMPUTE_TYPE=int8
 ```
 
-For a compatible CUDA installation, use:
+Keep these values for the stated i5 CPU-only hardware. If you intentionally change the local faster-whisper runtime, update all three values together:
 
 ```text
-WHISPER_DEVICE=cuda
-WHISPER_COMPUTE_TYPE=float16
+WHISPER_MODEL=<local-model-name>
+WHISPER_DEVICE=<cpu-or-supported-device>
+WHISPER_COMPUTE_TYPE=<supported-compute-type>
 ```
 
 ## Architecture
@@ -174,7 +182,7 @@ The provider boundaries make it possible to replace STT, LLM, or TTS later witho
 
 ## Troubleshooting
 
-- **Whisper unavailable:** check the FastAPI terminal. The model is loaded during startup and must be installed/cached locally.
+- **Whisper unavailable:** check the FastAPI terminal and `/health`. The model is loaded once on the first transcription request and must be installed/cached locally.
 - **Ollama offline/model missing:** make sure Ollama is running and `ollama list` includes `qwen3:8b`.
 - **Piper offline/voice missing:** confirm the Piper server is listening on port 5000 and has the Lessac voice installed.
 - **AI service unavailable:** check Ollama and confirm `qwen3:8b` is installed. Demo Mode remains available without Ollama.

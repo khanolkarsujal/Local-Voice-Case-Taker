@@ -80,7 +80,9 @@ piper_provider = PiperProvider(settings.piper_url, settings.piper_voice, setting
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    whisper_provider.load()
+    # Whisper is intentionally loaded lazily on the first transcription request.
+    # A CPU model download/initialization must not prevent FastAPI from serving
+    # the UI and /health when the model is slow or unavailable.
     yield
     await ollama_provider.close()
     await piper_provider.close()

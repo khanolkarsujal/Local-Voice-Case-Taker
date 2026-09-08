@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import tempfile
+import threading
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
+
+
+logger = logging.getLogger(__name__)
 
 
 class STTError(RuntimeError):
@@ -30,7 +35,7 @@ class STTProvider(ABC):
 
 
 class LocalWhisperProvider(STTProvider):
-    """faster-whisper provider. The model is loaded once during application startup."""
+    """Real faster-whisper provider with one-time, lazy model loading."""
 
     def __init__(self, model_name: str, device: str, compute_type: str) -> None:
         self.model_name = model_name
@@ -38,29 +43,61 @@ class LocalWhisperProvider(STTProvider):
         self.compute_type = compute_type
         self._model: Any | None = None
         self._startup_error: str | None = None
+        self._load_attempted = False
+        self._load_lock = threading.Lock()
 
-    def load(self) -> None:
-        try:
-            from faster_whisper import WhisperModel
+    def load(self) -> bool:
+        """Load faster-whisper at most once, without providing a fake fallback."""
+        if self._model is not None:
+            return True
 
-            self._model = WhisperModel(
+        with self._load_lock:
+            if self._model is not None:
+                return True
+            if self._load_attempted:
+                return False
+
+            self._load_attempted = True
+            logger.info(
+                "Loading Whisper model: %s (%s/%s)",
                 self.model_name,
-                device=self.device,
-                compute_type=self.compute_type,
+                self.device,
+                self.compute_type,
             )
-            self._startup_error = None
-        except Exception as exc:
-            self._model = None
-            self._startup_error = str(exc)
+            try:
+                from faster_whisper import WhisperModel
+
+                self._model = WhisperModel(
+                    self.model_name,
+                    device=self.device,
+                    compute_type=self.compute_type,
+                )
+                self._startup_error = None
+                logger.info("Whisper model loaded successfully")
+                return True
+            except Exception as exc:
+                self._model = None
+                self._startup_error = (
+                    f"Could not load faster-whisper model '{self.model_name}' "
+                    f"with device={self.device}, compute_type={self.compute_type}: {exc}"
+                )
+                logger.exception("Whisper model failed to load")
+                return False
 
     def is_ready(self) -> bool:
         return self._model is not None
+
+    @property
+    def load_attempted(self) -> bool:
+        return self._load_attempted
 
     @property
     def startup_error(self) -> str | None:
         return self._startup_error
 
     async def transcribe(self, audio: bytes, suffix: str = ".webm") -> str:
+        if self._model is None:
+            await asyncio.to_thread(self.load)
         if not self._model:
             detail = self._startup_error or "The faster-whisper model is not loaded."
             raise WhisperUnavailableError(detail)

@@ -1,0 +1,77 @@
+Update my Local-Voice-Case-Taker project to optimize faster-whisper for my actual Windows laptop.
+
+My hardware:
+- CPU: Intel Core i5-12400 (12th Gen)
+- RAM: 24 GB
+- GPU: Intel UHD Graphics 730 integrated graphics
+- No NVIDIA CUDA GPU
+
+Current problem:
+The FastAPI server gets stuck at:
+"Waiting for application startup."
+
+I found that backend/main.py has a FastAPI lifespan function that does:
+
+    whisper_provider.load()
+    yield
+
+The Whisper model is currently configured as large-v3, which is too heavy/slow for my CPU-only machine.
+
+MAKE THESE CHANGES:
+
+1. Change the default Whisper model from:
+   large-v3
+   to:
+   small
+
+2. Configure faster-whisper for CPU inference:
+   device = "cpu"
+   compute_type = "int8"
+
+3. Make these values configurable through .env:
+   WHISPER_MODEL=small
+   WHISPER_DEVICE=cpu
+   WHISPER_COMPUTE_TYPE=int8
+
+4. Check backend/config.py and update the settings/defaults so that the application actually uses these values.
+
+5. Keep Whisper loaded only ONCE. Do not reload the model for every request.
+
+6. Improve startup behavior:
+   - The FastAPI application should not become permanently stuck if Whisper loading fails.
+   - Give a clear error message/log if Whisper cannot load.
+   - Do not silently use a fake/mock Whisper implementation.
+   - The real local faster-whisper implementation must remain active.
+
+7. IMPORTANT:
+   Keep the existing architecture:
+   - faster-whisper for STT
+   - Ollama qwen3:8b for LLM
+   - Piper en_US-lessac-medium for TTS
+   - FastAPI backend
+   - existing medical case-taking functionality
+   Do not replace these with cloud APIs.
+
+8. If loading Whisper during startup is still too slow, modify the architecture so the web server can start first and Whisper is loaded lazily on the first transcription request, while still loading the model only once and safely handling concurrent requests.
+
+9. Add clear logging such as:
+   "Loading Whisper model: small (cpu/int8)"
+   "Whisper model loaded successfully"
+
+10. Do NOT download or use large-v3 anymore.
+
+11. Update .env.example and README.md to document the recommended CPU configuration.
+
+12. After making the changes, verify:
+   - Python syntax
+   - FastAPI imports
+   - application startup
+   - /health endpoint
+   - Whisper provider configuration
+   - no large-v3 reference remains in the active configuration
+
+Do not just tell me what to change. Actually modify the project files and then give me:
+A. files changed
+B. exact commands to run locally on Windows
+C. what I should expect to see in the terminal
+D. any model download command I need to run

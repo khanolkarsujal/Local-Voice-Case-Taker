@@ -22,12 +22,14 @@ async def get_health(
         details["piper"] = piper_detail
     if whisper.startup_error:
         details["whisper"] = whisper.startup_error
+    elif not whisper.load_attempted:
+        details["whisper"] = "Whisper has not loaded yet; it will load on the first transcription request."
 
     all_ready = ollama_online and piper_online and whisper_ready
     return HealthResponse(
         status="ok" if all_ready else "degraded",
         ollama="online" if ollama_online else "offline",
         piper="online" if piper_online else "offline",
-        whisper="ready" if whisper_ready else "unavailable",
+        whisper="ready" if whisper_ready else ("failed" if whisper.startup_error else "not_loaded"),
         details=details,
     )
