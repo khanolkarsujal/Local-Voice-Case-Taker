@@ -1,0 +1,372 @@
+BUILD PROMPT 2/2 — ADD MEDICAL PATIENT CASE-TAKING SYSTEM
+
+Now extend the existing working local voice chatbot.
+
+DO NOT rewrite the working voice pipeline.
+
+Keep:
+
+Microphone
+→ faster-whisper
+→ Ollama Qwen3 8B
+→ Piper
+→ Speaker
+
+Now turn it into a professional LOCAL-FIRST PATIENT CASE-TAKING ASSISTANT.
+
+IMPORTANT MEDICAL SAFETY:
+
+This application is ONLY for collecting patient information.
+
+It is NOT a doctor.
+
+It must NEVER:
+
+- Diagnose diseases
+- Prescribe medication
+- Recommend treatment
+- Tell patients to change medication
+- Claim medical certainty
+- Pretend to be a doctor
+
+If a patient asks for diagnosis or treatment, the assistant should politely explain that it only collects information and that a qualified clinician must make medical decisions.
+
+PRIMARY EXPERIENCE:
+
+Patient clicks:
+
+START INTERVIEW
+
+Assistant speaks:
+
+"Hello. I'm the patient case-taking assistant. I'll ask you some questions about your symptoms. A clinician will review the information afterward. What brings you in today?"
+
+Then the patient answers by voice.
+
+The system:
+
+Speech
+→ faster-whisper
+→ transcript
+→ case information extraction
+→ Qwen3 decides next question
+→ Piper speaks question
+→ patient answers
+→ repeat
+
+ASK ONE QUESTION AT A TIME.
+
+Questions must:
+
+- Be short.
+- Be easy for patients to understand.
+- Be natural.
+- Avoid unnecessary repetition.
+- Follow up when answers are incomplete.
+- Allow "I don't know."
+- Allow "I don't remember."
+- Allow the patient to skip.
+- Remember previous answers.
+
+CASE INFORMATION:
+
+Collect information relevant to the complaint:
+
+- Chief complaint
+- Onset
+- Duration
+- Location
+- Severity
+- Character/quality
+- Aggravating factors
+- Relieving factors
+- Associated symptoms
+- Past medical history
+- Current medications
+- Allergies
+- Relevant family history
+- Relevant personal/social history
+- Other relevant information
+
+Do not force irrelevant questions.
+
+STRUCTURED CASE:
+
+Maintain:
+
+{
+  "chief_complaint": "",
+  "history_of_present_illness": "",
+  "onset": "",
+  "duration": "",
+  "location": "",
+  "severity": "",
+  "character": "",
+  "aggravating_factors": [],
+  "relieving_factors": [],
+  "associated_symptoms": [],
+  "past_medical_history": [],
+  "medications": [],
+  "allergies": [],
+  "family_history": [],
+  "social_history": [],
+  "other_information": [],
+  "information_not_obtained": []
+}
+
+Make the schema easy to modify.
+
+IMPORTANT:
+
+Preserve BOTH:
+
+1. Structured information
+2. Original patient transcript
+
+Never replace the original patient answer with an AI-generated interpretation.
+
+The doctor must be able to see what the patient actually said.
+
+CONVERSATION LOGIC:
+
+Maintain a session containing:
+
+- Session ID
+- Conversation messages
+- Patient transcripts
+- AI questions
+- Structured case data
+- Current interview section
+- Interview status
+
+The LLM should determine the next appropriate question based on:
+
+- Existing case information
+- Previous questions
+- Patient answers
+- Current section
+- Missing relevant information
+
+Prevent repetitive questions.
+
+Do not expose hidden reasoning.
+
+The LLM should return structured information such as:
+
+{
+  "next_question": "...",
+  "case_updates": {},
+  "interview_complete": false
+}
+
+Validate this response using Pydantic.
+
+INTERVIEW COMPLETION:
+
+When sufficient information has been collected:
+
+1. Stop asking questions.
+2. Tell the patient the interview is complete.
+3. Generate the structured case summary.
+4. Open the doctor review screen.
+
+DOCTOR VIEW:
+
+Create a professional doctor-facing page.
+
+Title:
+
+"Patient Case Summary"
+
+Sections:
+
+1. Patient Complaint
+2. History of Present Illness
+3. Associated Symptoms
+4. Past Medical History
+5. Medications
+6. Allergies
+7. Family History
+8. Social History
+9. Other Relevant Information
+10. Information Not Obtained
+
+Then display:
+
+"Original Conversation Transcript"
+
+Show the original patient responses and assistant questions.
+
+Allow:
+
+- Edit structured information
+- Correct information
+- Review transcript
+- Start new interview
+- Export JSON
+- Export TXT
+
+Do not silently alter original transcript.
+
+UI:
+
+Keep the existing hospital-style interface.
+
+Patient screen:
+
+- AI question
+- Microphone button
+- Listening indicator
+- Processing indicator
+- Speaking indicator
+- Current transcript
+- Conversation history
+- Start Interview
+- Stop Interview
+
+Doctor screen:
+
+- Structured summary
+- Original transcript
+- Editable fields
+- Export buttons
+- New Interview
+
+DEMO MODE:
+
+Add:
+
+DEMO MODE — FICTIONAL DATA
+
+It must work without:
+
+- Microphone
+- Whisper
+- Ollama
+- Piper
+
+Use ONLY fictional patient information.
+
+Do not include real patient data.
+
+Demo Mode should demonstrate:
+
+- Patient interview
+- AI questions
+- Fake patient answers
+- Structured case extraction
+- Doctor summary
+- Transcript
+- Export
+
+PRIVACY:
+
+Local-first.
+
+By default:
+
+Patient audio stays local.
+Patient transcript stays local.
+Patient case information stays local.
+Whisper stays local.
+Ollama stays local.
+Piper stays local.
+
+Do not send patient data to third-party services.
+
+Do not log patient transcripts by default.
+
+Do not store patient data permanently unless explicitly configured.
+
+Clean temporary audio files after processing.
+
+EXPORT:
+
+Allow:
+
+Download JSON
+Download TXT
+
+No external service should be used.
+
+SAFETY UI:
+
+Clearly display somewhere appropriate:
+
+"AI case-taking assistant — not a diagnostic or treatment system."
+
+Also display:
+
+"Information should be reviewed by a qualified clinician."
+
+ERROR HANDLING:
+
+If voice services fail, allow the doctor/demo user to continue with text fallback.
+
+Show useful messages such as:
+
+"AI service unavailable. Please check Ollama."
+
+"Voice service unavailable. Please check Piper."
+
+"Microphone permission is required."
+
+"No speech detected. Please try again."
+
+DEMO PRESENTATION:
+
+Make the interface polished enough for a hospital technology demonstration.
+
+It should look like a serious healthcare application rather than a developer prototype.
+
+Do NOT add unnecessary features.
+
+Prioritize:
+
+1. Reliable voice conversation
+2. Natural case-taking
+3. Accurate transcript
+4. Structured patient history
+5. Doctor review
+6. Privacy
+7. Demo Mode
+
+FINAL TEST:
+
+After implementing Prompt 2:
+
+Test:
+
+1. Start interview.
+2. AI speaks.
+3. Patient speaks.
+4. Whisper transcribes.
+5. Qwen3 processes.
+6. Next question generated.
+7. Piper speaks.
+8. Conversation continues.
+9. Interview completes.
+10. Structured case summary appears.
+11. Original transcript appears.
+12. JSON export works.
+13. TXT export works.
+14. Demo Mode works.
+15. /health works.
+
+Fix errors before finishing.
+
+DO NOT replace real functionality with mock buttons.
+
+The final result must be a working local Windows application using:
+
+faster-whisper large-v3
++
+Ollama Qwen3 8B
++
+Piper en_US-lessac-medium
++
+FastAPI
++
+Web frontend
+
+The final goal is a safe, professional prototype suitable for demonstrating the concept to a hospital.

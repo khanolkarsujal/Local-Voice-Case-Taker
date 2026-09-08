@@ -133,3 +133,74 @@ h2 em { color: var(--purple); font-style: normal; }
   .service-name small { display: inline; }
   .status-panel, .tip-panel { padding: 18px; }
 }
+
+/* Medical case-taking and clinician review */
+.header-actions { display: flex; align-items: center; gap: 13px; }
+.safety-banner { display: flex; align-items: center; gap: 10px; border: 1px solid rgba(115, 228, 194, .22); border-radius: 12px; padding: 11px 14px; color: #b9d9d4; background: rgba(35, 87, 91, .17); font-size: 11px; line-height: 1.45; margin-bottom: 18px; }
+.safety-banner strong { color: #d7f1eb; font-weight: 700; }
+.safety-shield { width: 20px; height: 20px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid rgba(115,228,194,.42); border-radius: 7px; color: var(--mint); font-weight: 800; }
+.view-nav { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; }
+.view-tab { border: 1px solid transparent; border-radius: 9px; padding: 9px 13px; color: var(--subtle); background: transparent; font-size: 11px; font-weight: 700; }
+.view-tab:hover:not(:disabled) { color: var(--ink); background: rgba(255,255,255,.04); }
+.view-tab.active { border-color: rgba(117,167,255,.2); color: #dce7ff; background: rgba(117,167,255,.1); }
+.demo-badge { margin-left: auto; border: 1px solid rgba(255, 192, 112, .36); border-radius: 100px; padding: 7px 10px; color: #ffc982; background: rgba(125, 76, 38, .16); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; }
+.privacy-chip { border: 1px solid rgba(115,228,194,.2); border-radius: 100px; padding: 7px 9px; color: var(--mint); background: rgba(115,228,194,.07); font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; }
+.question-card { min-height: 103px; border-left: 2px solid var(--blue); border-radius: 0 11px 11px 0; margin-top: 24px; padding: 14px 16px; background: rgba(117,167,255,.07); }
+.question-label, .response-label { display: block; color: var(--blue); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; }
+.question-card p { max-width: 510px; color: #e1e7f8; font-size: 14px; line-height: 1.52; margin: 8px 0 0; }
+.control-panel .mic-stage { height: 207px; }
+.control-panel .state-block { min-height: 55px; }
+.demo-actions { display: flex; justify-content: center; gap: 10px; margin-top: 11px; }
+.demo-button { border: 1px solid rgba(255,192,112,.22); border-radius: 9px; padding: 8px 11px; color: #d7b780; background: rgba(125,76,38,.11); font-size: 10px; }
+.demo-button:hover { border-color: rgba(255,192,112,.45); color: #ffd598; background: rgba(125,76,38,.2); }
+.demo-button.next { border-color: rgba(115,228,194,.28); color: var(--mint); background: rgba(115,228,194,.08); }
+.review-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 20px 0 18px; }
+.review-heading h2 { font-size: clamp(26px, 4vw, 39px); }
+.review-subtitle { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+.review-actions { display: flex; gap: 9px; min-width: 305px; }
+.review-actions .primary-button, .review-actions .secondary-button { flex: 1; }
+.review-grid { display: grid; grid-template-columns: 1.03fr .97fr; gap: 18px; }
+.summary-panel, .transcript-panel { padding: 25px 27px; }
+.summary-panel h3, .transcript-panel h3, .status-panel h3 { margin: 0; color: #e5eaff; font-size: 17px; letter-spacing: -.035em; }
+.review-state { color: var(--mint); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.case-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 24px; }
+.case-field { display: flex; flex-direction: column; gap: 7px; }
+.case-field:nth-child(2), .case-field:nth-child(16) { grid-column: 1 / -1; }
+.case-field span { color: var(--subtle); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.case-field input, .case-field textarea { width: 100%; resize: vertical; border: 1px solid rgba(173,186,255,.13); border-radius: 9px; outline: none; padding: 10px 11px; color: #e1e7f8; background: rgba(10,13,27,.43); font-size: 12px; line-height: 1.45; }
+.case-field input:focus, .case-field textarea:focus { border-color: rgba(117,167,255,.55); background: rgba(10,13,27,.68); }
+.case-field input::placeholder, .case-field textarea::placeholder { color: #59627d; }
+.save-row { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+.save-row .primary-button { flex: 0 0 auto; }
+.save-message { color: var(--mint); font-size: 11px; }
+.review-transcript { max-height: 625px; overflow-y: auto; margin-top: 21px; padding-right: 6px; }
+.review-entry { border-bottom: 1px solid rgba(173,186,255,.1); padding: 12px 0; }
+.review-entry:last-child { border-bottom: 0; }
+.review-entry span { color: var(--subtle); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .11em; }
+.review-entry.patient span { color: var(--blue); }
+.review-entry.assistant span { color: var(--mint); }
+.review-entry p { color: #cbd1e8; font-size: 13px; line-height: 1.52; margin: 6px 0 0; }
+.export-actions { display: flex; gap: 9px; border-top: 1px solid rgba(173,186,255,.1); margin-top: 14px; padding-top: 16px; }
+.export-actions .secondary-button { color: var(--muted); }
+.privacy-panel { display: flex; gap: 15px; align-items: flex-start; padding: 21px 25px; min-height: 145px; }
+.privacy-icon { width: 29px; height: 29px; flex: 0 0 auto; border: 1px solid rgba(115,228,194,.3); border-radius: 9px; display: grid; place-items: center; color: var(--mint); }
+.privacy-panel p:last-child { max-width: 370px; color: var(--muted); font-size: 12px; line-height: 1.55; margin: 4px 0 0; }
+
+@media (max-width: 860px) {
+  .review-grid { grid-template-columns: 1fr; }
+  .review-heading { align-items: flex-start; flex-direction: column; }
+  .review-actions { width: 100%; min-width: 0; }
+}
+@media (max-width: 560px) {
+  .header-actions { align-items: stretch; flex-direction: column; width: 100%; gap: 8px; }
+  .header-actions .connection-pill { align-self: auto; }
+  .session-tag { align-self: flex-end; }
+  .safety-banner { align-items: flex-start; }
+  .view-nav { flex-wrap: wrap; }
+  .demo-badge { margin-left: 0; }
+  .case-fields { grid-template-columns: 1fr; }
+  .case-field:nth-child(2), .case-field:nth-child(16) { grid-column: auto; }
+  .summary-panel, .transcript-panel { padding: 20px 18px; }
+  .review-actions { flex-direction: column; }
+  .export-actions { flex-direction: column; }
+}
